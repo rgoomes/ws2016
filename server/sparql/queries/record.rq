@@ -1,0 +1,16 @@
+SELECT DISTINCT ?record
+WHERE {{
+	?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> .
+	?record <http://purl.org/dc/elements/1.1/title> ?title FILTER regex(LCASE(str(?tile)), "animals") .
+}
+UNION {
+	?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> .
+	?record <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> <http://dbtune.org/jamendo/tag/oyuagsoygasoyg> .
+}
+UNION {
+	?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> .
+	?record <http://xmlns.com/foaf/0.1/maker> ?artist .
+	?artist <http://xmlns.com/foaf/0.1/name> ?name FILTER regex(LCASE(str(?name)), "troy") .
+}}
+
+LIMIT 10
