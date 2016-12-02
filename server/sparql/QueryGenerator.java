@@ -91,6 +91,17 @@ public class QueryGenerator {
 		return null;
 	}
 
+	public static String lyricsQuery(String keyword){
+		return
+			"SELECT ?text " +
+			"WHERE { " +
+				"?description <http://purl.org/NET/c4dm/event.owl#factor> ?lyrics . " +
+				"?lyrics <http://purl.org/ontology/mo/text> ?text . " +
+				"?description <http://purl.org/ontology/mo/recorded_as> ?signal . " +
+				"?signal <http://purl.org/ontology/mo/published_as> " + tag(keyword) + " . " +
+			"} ";
+	}
+
 	public static String artistsQuery(String keyword, String limit) {
 		String query =
 			"SELECT DISTINCT ?artist " +

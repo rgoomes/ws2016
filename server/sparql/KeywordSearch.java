@@ -63,6 +63,10 @@ public class KeywordSearch extends Object {
 			String query = QueryGenerator.getEntity(search_keywords + limit);
 			run_query(query, new String[] {"predicate", "object"});
 		}
+		else if(keywords[0].equals("lyric")){
+			String query = QueryGenerator.lyricsQuery(search_keywords + limit);
+			run_query(query, new String[] {"text"});
+		}
 	}
 
 	public static void main(String args[]) {
