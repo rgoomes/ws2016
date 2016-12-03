@@ -70,7 +70,8 @@ public class KeywordSearch extends Object {
 	}
 
 	public static void main(String args[]) {
-		model.read("clean_jamendo.ttl", "TURTLE") ;
+		model.read("../ontology/database/clean_jamendo.ttl", "TURTLE");
+		System.out.println("jena: Model loaded " + model.size() + " triples");
 
 		while(true) {
 			System.out.print(">>> ");

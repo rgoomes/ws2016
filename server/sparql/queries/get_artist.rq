@@ -1,2 +1,0 @@
-SELECT * 
-WHERE { <http://dbtune.org/jamendo/artist/2443> ?p ?o }

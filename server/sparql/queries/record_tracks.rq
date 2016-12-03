@@ -1,4 +1,0 @@
-SELECT ?track
-WHERE {
-	<http://dbtune.org/jamendo/record/13130> <http://purl.org/ontology/mo/track> ?track .	
-}
