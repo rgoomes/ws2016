@@ -1,1 +1,27 @@
-/* CSS declarations go here */
+html, body {
+	 height: 100%;
+	 background-color: #f7f7f7;
+}
+
+.vertical-center {
+	top: 50%;
+	left: 50%;
+	position: fixed;
+
+	transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
+}
+
+#logo {
+	width: 50%;
+	max-width: 128px;
+	height: auto;
+}
+
+#top-bar {
+	padding: 10px;
+}
+
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+	background-color: white;
+}

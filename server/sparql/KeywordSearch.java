@@ -22,8 +22,10 @@ public class KeywordSearch extends Object {
 		Query qry = QueryFactory.create(query);
 		QueryExecution qe = QueryExecutionFactory.create(qry, model);
 		ResultSet rs = qe.execSelect();
+		int nresults = 0;
 
 		while(rs.hasNext()) {
+			nresults++;
 			QuerySolution sol = rs.nextSolution();
 
 			for(String col : columns){
@@ -33,6 +35,8 @@ public class KeywordSearch extends Object {
 
 			System.out.println("");
 		}
+
+		System.out.println("jena: search got " + nresults + " results");
 	}
 
 	public static void parse_input(String[] keywords) {
