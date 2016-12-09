@@ -9,6 +9,9 @@ Session.setDefault("numberResults", "");
 Session.setDefault("recordResult", null);
 Session.setDefault("artistResult", null);
 Session.setDefault("trackResult", null);
+Session.setDefault("recResults", null);
+Session.setDefault("recLabel", "");
+Session.setDefault("resultsLabel", "");
 
 var handleSearch = function(event, isClick){
 	if(isClick || event.which === 13){
@@ -35,6 +38,10 @@ var getClassType = function(type){
 	return type;
 }
 
+var firstLetterCapital = function(str) {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 //
 // template Home
 Template.Home.onCreated(function HomeOnCreated() {});
@@ -52,9 +59,12 @@ Template.Home.events({
 // template Results
 Template.Results.onCreated(function ResultsOnCreated() {});
 Template.Results.helpers({
-	getSearchType: function(type){ return type == Session.get("resultsType"); },
+	isSearchType: function(type){ return type == Session.get("resultsType"); },
+	getSearchType: function(){ return Session.get("recLabel"); },
+	getResultsLabel: function(){ return Session.get("resultsLabel"); },
 	getNumberOfResults: function(){ return Session.get("numberResults"); },
-	getResults: function(){ return Session.get("mainResults"); }
+	getResults: function(){ return Session.get("mainResults"); },
+	getRecommendations: function(){ return Session.get("recResults"); },
 });
 Template.Results.events({
 	'keypress #search-input'(event, instance){
@@ -138,7 +148,9 @@ Router.route('/results', function () {
 
 	// this two lines adds a visual clue that a search is in progress
 	Session.set("resultsType", "");
-	Session.set("numberResults", "Searching..");
+	Session.set("numberResults", "");
+	Session.set("recLabel", "");
+	Session.set("resultsLabel", "Searching..");
 
 	var query = this.params.query;
 	var hash = this.params.hash;
@@ -154,13 +166,17 @@ Router.route('/results', function () {
 
 		// TODO: set results and number of results here based on the requested search
 		var artistExample = [
-			{ score: '100', name: 'A', homepage: 'fb', area: 'China', tags: ['pop', 'rock'] },
-			{ score: '98', name: 'B', homepage: 'yt', area: 'Djibouti', tags: ['dnb'] },
+			{ name: 'A', title: 'A', homepage: 'fb', area: 'China', tags: ['pop', 'rock'] },
+			{ name: 'B', title: 'B', homepage: 'yt', area: 'Djibouti', tags: ['dnb'] },
 		];
 
+		Session.set("resultsLabel", "Results");
 		Session.set("mainResults", artistExample);
 		Session.set("resultsType", class_type);
 		Session.set("numberResults", "Got " + artistExample.length + " results");
+
+		Session.set("recResults", artistExample);
+		Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
 	});
 }, {
 	name: 'results'

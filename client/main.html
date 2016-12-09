@@ -22,26 +22,49 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<span style="font-size: 18px;">Search Results</span>
+		<span style="font-size: 18px;">{{getResultsLabel}}</span>
 	</div>
 	<div class="container-fluid">
 		<span style="font-size: 12px;" class="pull-right">{{getNumberOfResults}}</span>
 	</div>
 	<div class="container-fluid">
+		<!-- Results table -->
 		<table class="table table-hover">
-			{{#if getSearchType "artist"}}
-				{{> ArtistsTable results=getResults }}
+			{{#if isSearchType "artist"}}
+				{{> ArtistsTable results=getResults full=true }}
 			{{/if}}
 
-			{{#if getSearchType "record"}}
+			{{#if isSearchType "record"}}
 				{{> RecordsTable results=getResults full=true }}
 			{{/if}}
 
-			{{#if getSearchType "track"}}
+			{{#if isSearchType "track"}}
 				{{> TracksTable results=getResults full=true }}
 			{{/if}}
 		</table>
 	</div>
+	<br>
+	<div class="container-fluid">
+		<span style="font-size: 18px;">{{getSearchType}}</span>
+	</div>
+	<br>
+	<div class="container-fluid">
+		<!-- Recommendation table -->
+		<table class="table table-hover">
+			{{#if isSearchType "artist"}}
+				{{> ArtistsTable results=getRecommendations full=true }}
+			{{/if}}
+
+			{{#if isSearchType "record"}}
+				{{> RecordsTable results=getRecommendations full=true }}
+			{{/if}}
+
+			{{#if isSearchType "track"}}
+				{{> TracksTable results=getRecommendations full=true }}
+			{{/if}}
+		</table>
+	</div>
+
 </template>
 
 <template name="Artist">
@@ -157,7 +180,6 @@
 <template name="ArtistsTable">
 	<thead>
 		<tr>
-			<th>Score</th>
 			<th>Name</th>
 			<th>Homepage</th>
 			<th>Area</th>
@@ -166,7 +188,6 @@
 	<tbody>
 		{{#each results}}
 			<tr>
-				<td>{{score}}</td>
 				<td><a href="/artist/{{artist_id}}">{{name}}</a></td>
 				<td><a href={{homepage}}>{{homepage}}</a></td>
 				<td>{{area}}</td>
@@ -178,9 +199,6 @@
 <template name="RecordsTable">
 	<thead>
 		<tr>
-			{{#if full}}
-			<th>Score</th>
-			{{/if}}
 			<th>Title</th>
 			{{#if full}}
 			<th>Artist</th>
@@ -193,9 +211,6 @@
 	<tbody>
 		{{#each results}}
 			<tr>
-				{{#if ../full}}
-				<td>{{score}}</td>
-				{{/if}}
 				<td><a href="/record/{{record_id}}">{{title}}</a></td>
 				{{#if ../full}}
 				<td><a href="/artist/{{artist_id}}">{{artist}}</a></td>
@@ -215,25 +230,19 @@
 <template name="TracksTable">
 	<thead>
 		<tr>
-			{{#if full}}
-			<th>Score</th>
-			{{/if}}
 			<th>Title</th>
 			<th>Artist</th>
 			<th>Track Number</th>
-			<th>Licence</th>
+			<th>License</th>
 		</tr>
 	</thead>
 	<tbody>
 		{{#each results}}
 			<tr>
-				{{#if ../full}}
-				<td>{{score}}</td>
-				{{/if}}
 				<td><a href="/track/{{track_id}}">{{title}}</a></td>
 				<td><a href="/artist/{{artist_id}}">{{artist}}</a></td>
 				<td>{{number}}</td>
-				<td>{{licence}}</td>
+				<td>{{license}}</td>
 			</tr>
 		{{/each}}
 	</tbody>
