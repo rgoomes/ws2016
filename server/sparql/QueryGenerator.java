@@ -65,8 +65,29 @@ public class QueryGenerator {
 	}
 
 	public static String artistsRecommendationQuery(String [] artists, String limit) {
-		// TODO
-		return null;
+		String query =
+			"SELECT DISTINCT ?recommended_artist " +
+			"WHERE {";
+
+		for(int i = 0; i < artists.length; i++){
+			String match =
+				tag(artists[i]) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
+				tag(artists[i]) + " <http://xmlns.com/foaf/0.1/made> ?record1_" + Integer.toString(i+1) + " . " +
+				"?record1_" + Integer.toString(i+1) + " <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag1_" + Integer.toString(i+1) + " . " +
+				"?tag1_" + Integer.toString(i+1) + " <http://www.holygoat.co.uk/owl/redwood/0.1/tags/tagName> ?tag_name1_" + Integer.toString(i+1) + " . " +
+				"?record2_" + Integer.toString(i+1) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
+				"?record2_" + Integer.toString(i+1) + " <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag2_" + Integer.toString(i+1) + " . " +
+				"?tag2_" + Integer.toString(i+1) + " <http://www.holygoat.co.uk/owl/redwood/0.1/tags/tagName> ?tag_name1_" + Integer.toString(i+1) + " . " +
+				"?record2_" + Integer.toString(i+1) + " <http://xmlns.com/foaf/0.1/maker> ?recommended_artist FILTER(?recommended_artist != " + tag(artists[i]) + " ) . ";
+
+			if(i == 0)
+				query += " " + brace(match) + " ";
+			else
+				query += " " + union(match) + " ";
+		}
+
+		query += "} " + (limit.equals("inf") ? "" : "LIMIT " + limit);
+		return query;
 	}
 
 	public static String tracksQuery(String keyword, String limit) {
