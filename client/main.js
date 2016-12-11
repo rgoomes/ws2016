@@ -60,7 +60,7 @@ Template.Home.events({
 Template.Results.onCreated(function ResultsOnCreated() {});
 Template.Results.helpers({
 	isSearchType: function(type){ return type == Session.get("resultsType"); },
-	getSearchType: function(){ return Session.get("recLabel"); },
+	getSearchLabel: function(){ return Session.get("recLabel"); },
 	getResultsLabel: function(){ return Session.get("resultsLabel"); },
 	getNumberOfResults: function(){ return Session.get("numberResults"); },
 	getResults: function(){ return Session.get("mainResults"); },
@@ -79,11 +79,9 @@ Template.Results.events({
 // template Artist
 Template.Artist.onCreated(function ArtistOnCreated() {});
 Template.Artist.helpers({
-	getName: function(){ return Session.get("artistResult").name; },
-	getBiography: function(){ return Session.get("artistResult").biography; },
-	getHomepage: function(){ return Session.get("artistResult").homepage; },
-	getRecords: function(){ return Session.get("artistResult").records; },
-	getImage: function(){ return Session.get("artistResult").img; },
+	getArtist: function(){
+		return Session.get("artistResult");
+	},
 });
 Template.Artist.events({
 	'keypress #search-input'(event, instance){
@@ -98,14 +96,9 @@ Template.Artist.events({
 // template Record
 Template.Record.onCreated(function RecordOnCreated() {});
 Template.Record.helpers({
-	getName: function(){ return Session.get("recordResult").name; },
-	getDescription: function(){ return Session.get("recordResult").description; },
-	getNumberofTracks: function(){ return Session.get("recordResult").ntracks; },
-	getTags: function(){ return Session.get("recordResult").tags; },
-	getTracks: function(){ return Session.get("recordResult").tracks; },
-	getArtist: function(){ return Session.get("recordResult").artist; },
-	getArtistID: function(){ return Session.get("recordResult").artist_id; },
-	getImage: function(){ return Session.get("recordResult").img; },
+	getRecord: function(){
+		return Session.get("recordResult");
+	},
 });
 Template.Record.events({
 	'keypress #search-input'(event, instance){
@@ -120,11 +113,9 @@ Template.Record.events({
 // template Track
 Template.Track.onCreated(function TrackOnCreated() {});
 Template.Track.helpers({
-	getTitle: function(){ return Session.get("trackResult").title; },
-	getLyrics: function(){ return Session.get("trackResult").lyrics; },
-	getLicense: function(){ return Session.get("trackResult").license; },
-	getArtist: function(){ return Session.get("trackResult").artist; },
-	getArtistID: function(){ return Session.get("trackResult").artist_id; },
+	getTrack: function(){
+		return Session.get("trackResult");
+	},
 });
 Template.Track.events({
 	'keypress #search-input'(event, instance){
@@ -146,7 +137,6 @@ Router.route('/', function () {
 Router.route('/results', function () {
 	this.render('Results');
 
-	// this two lines adds a visual clue that a search is in progress
 	Session.set("resultsType", "");
 	Session.set("numberResults", "");
 	Session.set("recLabel", "");

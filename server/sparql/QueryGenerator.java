@@ -10,8 +10,63 @@ public class QueryGenerator {
 		return "<" + str + ">";
 	}
 
+	public static String brace(String str){
+		return "{" + str + "}";
+	}
+
+	public static String union(String str){
+		return "UNION " + brace(str);
+	}
+
 	public static String getEntity(String keyword){
 		return "SELECT * " + "WHERE { " + tag(keyword) + " ?predicate ?object } ";
+	}
+
+	public static String recordsRecommendationQuery(String [] records, String limit) {
+		String query =
+			"SELECT DISTINCT ?recommended_record " +
+			"WHERE {";
+
+		for(int i = 0; i < records.length; i++){
+			String match =
+				tag(records[i]) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
+				tag(records[i]) + " <http://xmlns.com/foaf/0.1/maker> ?artist" + Integer.toString(i+1) +  " . " +
+				"?artist" + Integer.toString(i+1) + " <http://xmlns.com/foaf/0.1/made> ?recommended_record FILTER(?recommended_record != " + tag(records[i]) + " ) . ";
+
+			if(i == 0)
+				query += " " + brace(match) + " ";
+			else
+				query += " " + union(match) + " ";
+		}
+
+		query += "} " + (limit.equals("inf") ? "" : "LIMIT " + limit);
+		return query;
+	}
+
+	public static String tracksRecommendationQuery(String [] tracks, String limit) {
+		String query =
+			"SELECT DISTINCT ?recommended_track " +
+			"WHERE {";
+
+		for(int i = 0; i < tracks.length; i++){
+			String match =
+				tag(tracks[i]) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Track> . " +
+				"?record" + Integer.toString(i+1) + " <http://purl.org/ontology/mo/track> " + tag(tracks[i]) + " . " +
+				"?record" + Integer.toString(i+1) + " <http://purl.org/ontology/mo/track> ?recommended_track FILTER(?recommended_track != " + tag(tracks[i]) + " ) . ";
+
+			if(i == 0)
+				query += " " + brace(match) + " ";
+			else
+				query += " " + union(match) + " ";
+		}
+
+		query += "} " + (limit.equals("inf") ? "" : "LIMIT " + limit);
+		return query;
+	}
+
+	public static String artistsRecommendationQuery(String [] artists, String limit) {
+		// TODO
+		return null;
 	}
 
 	public static String tracksQuery(String keyword, String limit) {

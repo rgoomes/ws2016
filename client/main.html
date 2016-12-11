@@ -45,7 +45,7 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<span style="font-size: 18px;">{{getSearchType}}</span>
+		<span style="font-size: 18px;">{{getSearchLabel}}</span>
 	</div>
 	<br>
 	<div class="container-fluid">
@@ -73,25 +73,25 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<img src={{getImage}} class="img-rounded pull-left" style="margin-right: 10px;">
+		<img src={{getArtist.img}} class="img-rounded pull-left" style="margin-right: 10px;">
 		<div class="pull-left">
-			<span style="font-size: 18px;"><b>{{getName}}</b>,</span>
+			<span style="font-size: 18px;"><b>{{getArtist.name}}</b>,</span>
 			<span style="font-size: 16px;"> Portugal</span><br>
 			<span style="font-size: 14px;">
-				<a href={{getHomepage}}>{{getHomepage}}</a>
+				<a href={{getArtist.homepage}}>{{getArtist.homepage}}</a>
 			</span>
 		</div>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Biography</span><br>
-		<span style="font-size: 14px;">{{getBiography}}</span>
+		<span style="font-size: 14px;">{{getArtist.biography}}</span>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Discography</span><br>
 		<table class="table table-hover">
-			{{> RecordsTable results=getRecords full=false }}
+			{{> RecordsTable results=getArtist.records full=false }}
 		</table>
 	</div>
 </template>
@@ -102,24 +102,24 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<img src={{getImage}} class="img-rounded pull-left" style="margin-right: 10px;">
+		<img src={{getRecord.img}} class="img-rounded pull-left" style="margin-right: 10px;">
 		<div class="pull-left">
-			<span style="font-size: 18px;"><b>{{getName}}, </b></span>
+			<span style="font-size: 18px;"><b>{{getRecord.name}}, </b></span>
 			<span style="font-size: 16px;">
-				<a href="/artist/{{getArtistID}}">{{getArtist}}</a>
+				<a href="/artist/{{getRecord.artist_id}}">{{getRecord.artist}}</a>
 			</span><br>
-			<span style="font-size: 14px;">{{getNumberofTracks}} Tracks</span>
+			<span style="font-size: 14px;">{{getRecord.ntracks}} Tracks</span>
 		</div>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Description</span><br>
-		<span style="font-size: 14px;">{{getDescription}}</span>
+		<span style="font-size: 14px;">{{getRecord.description}}</span>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Tags</span><br>
-		{{#each getTags}}
+		{{#each getRecord.tags}}
 			<a href="/results?keyword={{this}}&type=tag">{{this}}</a>
 		{{/each}}
 	</div>
@@ -127,7 +127,7 @@
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Tracks</span><br>
 		<table class="table table-hover">
-			{{> TracksTable results=getTracks full=false }}
+			{{> TracksTable results=getRecord.tracks full=false }}
 		</table>
 	</div>
 </template>
@@ -138,18 +138,18 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<span style="font-size: 18px;"><b>{{getTitle}}</b>, </span>
-		<span style="font-size: 16px;"><a href="/artist/{{getArtistID}}">{{getArtist}}</a></span>
+		<span style="font-size: 18px;"><b>{{getTrack.title}}</b>, </span>
+		<span style="font-size: 16px;"><a href="/artist/{{getTrack.artist_id}}">{{getTrack.artist}}</a></span>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Lyrics</span><br>
-		<span style="font-size: 14px;">{{getLyrics}}</span>
+		<span style="font-size: 14px;">{{getTrack.lyrics}}</span>
 	</div>
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">License</span><br>
-		<span style="font-size: 14px;"><a href={{getLicense}}>{{getLicense}}</a></span>
+		<span style="font-size: 14px;"><a href={{getTrack.license}}>{{getTrack.license}}</a></span>
 	</div>
 </template>
 

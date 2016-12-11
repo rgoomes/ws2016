@@ -71,6 +71,19 @@ public class KeywordSearch extends Object {
 			String query = QueryGenerator.lyricsQuery(search_keywords + limit);
 			run_query(query, new String[] {"text"});
 		}
+
+		else if(keywords[0].equals("recordsrec")){
+			String query = QueryGenerator.recordsRecommendationQuery(slice, limit);
+			run_query(query, new String[] {"recommended_record"});
+		}
+		else if(keywords[0].equals("tracksrec")){
+			String query = QueryGenerator.tracksRecommendationQuery(slice, limit);
+			run_query(query, new String[] {"recommended_track"});
+		}
+		else if(keywords[0].equals("artistsrec")){
+			String query = QueryGenerator.artistsRecommendationQuery(slice, limit);
+			run_query(query, new String[] {"recommended_artist"});
+		}
 	}
 
 	public static void main(String args[]) {
