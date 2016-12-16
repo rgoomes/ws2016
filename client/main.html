@@ -22,11 +22,12 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<span style="font-size: 18px;">{{getResultsLabel}}</span>
-	</div>
-	<div class="container-fluid">
 		<span style="font-size: 12px;" class="pull-right">{{getNumberOfResults}}</span>
 	</div>
+	<div class="container-fluid">
+		<span style="font-size: 18px;">{{getResultsLabel}}</span>
+	</div>
+	<br>
 	<div class="container-fluid">
 		<!-- Results table -->
 		<table class="table table-hover">
@@ -45,7 +46,7 @@
 	</div>
 	<br>
 	<div class="container-fluid">
-		<span style="font-size: 18px;">{{getSearchLabel}}</span>
+		<span id="rec" style="font-size: 18px;">{{getSearchLabel}}</span>
 	</div>
 	<br>
 	<div class="container-fluid">
@@ -77,7 +78,7 @@
 			width: 150px; height: 150px;"> <!-- Fixed width and height -->
 		<div class="pull-left">
 			<span style="font-size: 18px;"><b>{{getArtist.name}}</b>,</span>
-			<span style="font-size: 16px;"> Portugal</span><br>
+			<span style="font-size: 16px;"> {{getArtist.area}}</span><br>
 			<span style="font-size: 14px;">
 				<a href={{getArtist.homepage}}>{{getArtist.homepage}}</a>
 			</span>
@@ -91,7 +92,7 @@
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Discography</span><br>
-		<table class="table table-hover">
+		<table class="table table-hover table-condensed">
 			{{> RecordsTable results=getArtist.records full=false }}
 		</table>
 	</div>
@@ -106,7 +107,7 @@
 		<img src={{getRecord.img}} class="img-rounded pull-left" style="margin-right: 10px;
 			width: 150px; height: 150px;"> <!-- Fixed width and height -->
 		<div class="pull-left">
-			<span style="font-size: 18px;"><b>{{getRecord.name}}, </b></span>
+			<span style="font-size: 18px;"><b>{{getRecord.title}}, </b></span>
 			<span style="font-size: 16px;">
 				<a href="/artist/{{getRecord.artist_id}}">{{getRecord.artist}}</a>
 			</span><br>
@@ -128,7 +129,7 @@
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;">Tracks</span><br>
-		<table class="table table-hover">
+		<table class="table table-hover table-condensed">
 			{{> TracksTable results=getRecord.tracks full=false }}
 		</table>
 	</div>
@@ -141,7 +142,8 @@
 	<br>
 	<div class="container-fluid">
 		<span style="font-size: 18px;"><b>{{getTrack.title}}</b>, </span>
-		<span style="font-size: 16px;"><a href="/artist/{{getTrack.artist_id}}">{{getTrack.artist}}</a></span>
+		<span style="font-size: 16px;"><a href="/record/{{getTrack.record_id}}">{{getTrack.record}}</a></span><br>
+		<span style="font-size: 14px;"><a href="/artist/{{getTrack.artist_id}}">{{getTrack.artist}}</a></span>
 	</div>
 	<br>
 	<div class="container-fluid">
@@ -163,7 +165,6 @@
 				<option value="record">Record</option>
 				<option value="track">Track</option>
 				<option value="genre">Genre</option>
-				<option value="lyric">Lyric</option>
 				<option value="tag">Tag</option>
 			</select>
 		</div>
@@ -184,6 +185,7 @@
 		<tr>
 			<th>Name</th>
 			<th>Homepage</th>
+			<th>Number of Records</th>
 			<th>Area</th>
 		</tr>
 	</thead>
@@ -192,6 +194,7 @@
 			<tr>
 				<td><a href="/artist/{{artist_id}}">{{name}}</a></td>
 				<td><a href={{homepage}}>{{homepage}}</a></td>
+				<td>{{nrecords}}</td>
 				<td>{{area}}</td>
 			</tr>
 		{{/each}}
@@ -206,7 +209,7 @@
 			<th>Artist</th>
 			{{/if}}
 			<th>Type</th>
-			<th>Number of Tracks</th>
+			<th>Tracks</th>
 			<th>Tags</th>
 		</tr>
 	</thead>
@@ -234,6 +237,9 @@
 		<tr>
 			<th>Title</th>
 			<th>Artist</th>
+			{{#if full}}
+			<th>Record</th>
+			{{/if}}
 			<th>Track Number</th>
 			<th>License</th>
 		</tr>
@@ -243,8 +249,11 @@
 			<tr>
 				<td><a href="/track/{{track_id}}">{{title}}</a></td>
 				<td><a href="/artist/{{artist_id}}">{{artist}}</a></td>
+				{{#if ../full}}
+				<td><a href="/record/{{record_id}}">{{record}}</a></td>
+				{{/if}}
 				<td>{{number}}</td>
-				<td>{{license}}</td>
+				<td><a href={{license}}>{{license}}</a></td>
 			</tr>
 		{{/each}}
 	</tbody>

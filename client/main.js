@@ -32,8 +32,6 @@ var getClassType = function(type){
 		return "record";
 	if(type == "tag")
 		return "record";
-	if(type == "lyric")
-		return "track";
 
 	return type;
 }
@@ -128,114 +126,97 @@ Template.Track.events({
 
 //
 // Routers
+// TODO: remove meteor calls from routers
 Router.route('/', function () {
 	this.render('Home');
 }, {
 	name: 'home'
 });
 
-Router.route('/results', function () {
-	this.render('Results');
-
+var searchKeyword = function(route_params){
 	Session.set("resultsType", "");
 	Session.set("numberResults", "");
 	Session.set("recLabel", "");
 	Session.set("resultsLabel", "Searching..");
+	Session.set("recResults", "");
 
-	var query = this.params.query;
-	var hash = this.params.hash;
-	var type = query.type;
-	var class_type = getClassType(type);
+	var query = route_params.query;
+	var hash = route_params.hash;
+	var class_type = getClassType(query.type);
 
-	Meteor.call('test', function(error, result){
+	var t0 = performance.now();
+	Meteor.call('search', query.keyword.toLowerCase(), query.type, class_type, function(error, result){
 		if(error){
 			console.log(error);
-		} else {
-			console.log(result);
+			return;
+		}
+		if(result == null){
+			Session.set("resultsLabel", "Sorry! Some sort of error happened.");
+			return;
 		}
 
-		// TODO: set results and number of results here based on the requested search
-		var artistExample = [
-			{ name: 'A', title: 'A', homepage: 'fb', area: 'China', tags: ['pop', 'rock'] },
-			{ name: 'B', title: 'B', homepage: 'yt', area: 'Djibouti', tags: ['dnb'] },
-		];
+		var t1 = performance.now();
+		var elapsed = (t1 - t0) / 1000;
 
 		Session.set("resultsLabel", "Results");
-		Session.set("mainResults", artistExample);
+		Session.set("mainResults", result);
 		Session.set("resultsType", class_type);
-		Session.set("numberResults", "Got " + artistExample.length + " results");
+		Session.set("numberResults", "Got " + result.length + " results in " + elapsed.toFixed(2) + " seconds");
 
-		Session.set("recResults", artistExample);
-		Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
+		if(result.length){
+			// TODO: meteor call to get recommendations
+			Session.set("recResults", result);
+			Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
+		}
 	});
+}
+
+var lookupEntity = function(entity_session_var, id, class_type){
+	Meteor.call('lookup', id, class_type, function(error, result){
+		if(error){
+			console.log(error);
+			return;
+		}
+		if(result == null)
+			return;
+
+		Session.set(entity_session_var, result);
+	});
+}
+
+Router.route('/results', function () {
+	this.render('Results');
+	searchKeyword(this.params);
 }, {
 	name: 'results'
 });
 
 Router.route('/artist/:_id', function () {
+	Session.set("artistResult", null);
 	this.render('Artist');
-	var id = this.params._id;
-
-	// TODO: meteor call to get artist info
-	var artistExample = {
-		name: "Caucenus",
-		biography: "asdasd asdasdas dasdsdas dasdas das dasda sd",
-		homepage: "https://caucenus.bandcamp.com/",
-		img: "http://placehold.it/150x150",
-		records: [
-			{ title: 'Nomad', record_id: '1', type: 'Album', ntracks: 9, tags: ['dnb'] },
-			{ title: 'Manimals', record_id: '2', type: 'Single', ntracks: 1, tags: ['pop', 'rock'] },
-		]
-	};
-
-	Session.set("artistResult", artistExample);
-
+	lookupEntity("artistResult", this.params._id, 'artist');
 }, {
 	name: 'artist'
 });
 
 Router.route('/record/:_id', function () {
+	Session.set("recordResult", null);
 	this.render('Record');
-	var id = this.params._id;
-
-	// TODO: meteor call to get record info
-	var recordExample = {
-		name: "Nomad",
-		description: "asdasd asdasdas dasdsdas dasdas das dasda sd",
-		ntracks: 9,
-		tags: ["pop", "rock", "dnb", "punk"],
-		artist: "Caucenus",
-		artist_id: 1,
-		img: "http://placehold.it/150x150",
-		tracks: [
-			{ title: 'Guiriot', track_id: '1' },
-			{ title: 'Manimals', track_id: '2' },
-		]
-	};
-
-	Session.set("recordResult", recordExample);
+	lookupEntity("recordResult", this.params._id, 'record');
 }, {
 	name: 'record'
 });
 
 Router.route('/track/:_id', function () {
+	Session.set("trackResult", null);
 	this.render('Track');
-	var id = this.params._id;
-
-	// TODO: meteor call to get track info
-	var trackExample = {
-		title: "Guiriot",
-		lyrics: "Exaaaacto é cancro.. I got iiiiiiiiiiiiiiiiiiiiit in my mind",
-		license: "http://creativecommons.org/licenses/by-nc-nd/3.0/",
-		artist: "Caucenus",
-		artist_id: 1,
-	};
-
-	Session.set("trackResult", trackExample);
+	lookupEntity("trackResult", this.params._id, 'track');
 }, {
 	name: 'track'
 });
 
 Router.route('/(.*)', function() {
 	this.render('Page404');
+}, {
+	name: 'nopage'
 });

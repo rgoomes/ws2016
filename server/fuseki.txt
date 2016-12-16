@@ -1,0 +1,2 @@
+./fuseki-server --update --mem /ds
+./s-put http://localhost:3030/ds/data default /path/to/clean_jamendo.nt
