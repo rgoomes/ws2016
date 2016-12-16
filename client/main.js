@@ -147,27 +147,34 @@ Router.route('/results', function () {
 	var type = query.type;
 	var class_type = getClassType(type);
 
-	Meteor.call('test', function(error, result){
-		if(error){
-			console.log(error);
-		} else {
-			console.log(result);
-		}
+	if (type === "semantic") {
+		Meteor.call('semantic_search', function(error, result) {
+			console.log("asd")
+		});
+	}
+	else {
+		Meteor.call('test', function(error, result){
+			if(error){
+				console.log(error);
+			} else {
+				console.log(result);
+			}
 
-		// TODO: set results and number of results here based on the requested search
-		var artistExample = [
-			{ name: 'A', title: 'A', homepage: 'fb', area: 'China', tags: ['pop', 'rock'] },
-			{ name: 'B', title: 'B', homepage: 'yt', area: 'Djibouti', tags: ['dnb'] },
-		];
+			// TODO: set results and number of results here based on the requested search
+			var artistExample = [
+				{ name: 'A', title: 'A', homepage: 'fb', area: 'China', tags: ['pop', 'rock'] },
+				{ name: 'B', title: 'B', homepage: 'yt', area: 'Djibouti', tags: ['dnb'] },
+			];
 
-		Session.set("resultsLabel", "Results");
-		Session.set("mainResults", artistExample);
-		Session.set("resultsType", class_type);
-		Session.set("numberResults", "Got " + artistExample.length + " results");
+			Session.set("resultsLabel", "Results");
+			Session.set("mainResults", artistExample);
+			Session.set("resultsType", class_type);
+			Session.set("numberResults", "Got " + artistExample.length + " results");
 
-		Session.set("recResults", artistExample);
-		Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
-	});
+			Session.set("recResults", artistExample);
+			Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
+		});
+	}
 }, {
 	name: 'results'
 });
@@ -225,7 +232,7 @@ Router.route('/track/:_id', function () {
 	// TODO: meteor call to get track info
 	var trackExample = {
 		title: "Guiriot",
-		lyrics: "Exaaaacto é cancro.. I got iiiiiiiiiiiiiiiiiiiiit in my mind",
+		lyrics: "",
 		license: "http://creativecommons.org/licenses/by-nc-nd/3.0/",
 		artist: "Caucenus",
 		artist_id: 1,
