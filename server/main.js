@@ -22,7 +22,7 @@ Meteor.methods({
 		});
 		try {
 			console.log(JSON.parse(res.content).results.bindings[0].p.value);
-			//return "genre";
+			return "genre";
 		} catch (err) {
 			console.log("No results found for genre!");
 		}
@@ -40,6 +40,7 @@ Meteor.methods({
 		});
 		try {
 			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "record";
 		} catch (err) {
 			console.log("No results found for records!");
 		}
@@ -71,9 +72,28 @@ Meteor.methods({
 			});
 			try {
 				console.log(JSON.parse(res_.content).results.bindings[0].p.value);
+				return "artist";
 			} catch (err_) {
 				console.log("No results found for artists!");
 			}
+		}
+
+		var query="select distinct ?p where {\
+				?p ?o <http://dbpedia.org/ontology/Song> . \
+				?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
+				FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"asdasd\"))\
+				}";
+		var res = HTTP.call("GET", "http://dbpedia.org/sparql", {
+			params: {
+				'query': query,
+				'format': "json"
+			}
+		});
+		try {
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "track";
+		} catch (err) {
+			console.log("No results found for songs!");
 		}
 	},
 });
