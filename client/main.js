@@ -9,9 +9,8 @@ Session.setDefault("numberResults", "");
 Session.setDefault("recordResult", null);
 Session.setDefault("artistResult", null);
 Session.setDefault("trackResult", null);
-Session.setDefault("recResults", null);
-Session.setDefault("recLabel", "");
 Session.setDefault("resultsLabel", "");
+Session.setDefault("globalLoading", false);
 
 var handleSearch = function(event, isClick){
 	if(isClick || event.which === 13){
@@ -58,11 +57,10 @@ Template.Home.events({
 Template.Results.onCreated(function ResultsOnCreated() {});
 Template.Results.helpers({
 	isSearchType: function(type){ return type == Session.get("resultsType"); },
-	getSearchLabel: function(){ return Session.get("recLabel"); },
 	getResultsLabel: function(){ return Session.get("resultsLabel"); },
 	getNumberOfResults: function(){ return Session.get("numberResults"); },
 	getResults: function(){ return Session.get("mainResults"); },
-	getRecommendations: function(){ return Session.get("recResults"); },
+	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Results.events({
 	'keypress #search-input'(event, instance){
@@ -77,9 +75,8 @@ Template.Results.events({
 // template Artist
 Template.Artist.onCreated(function ArtistOnCreated() {});
 Template.Artist.helpers({
-	getArtist: function(){
-		return Session.get("artistResult");
-	},
+	getArtist: function(){ return Session.get("artistResult"); },
+	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Artist.events({
 	'keypress #search-input'(event, instance){
@@ -94,9 +91,8 @@ Template.Artist.events({
 // template Record
 Template.Record.onCreated(function RecordOnCreated() {});
 Template.Record.helpers({
-	getRecord: function(){
-		return Session.get("recordResult");
-	},
+	getRecord: function(){ return Session.get("recordResult"); },
+	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Record.events({
 	'keypress #search-input'(event, instance){
@@ -111,9 +107,8 @@ Template.Record.events({
 // template Track
 Template.Track.onCreated(function TrackOnCreated() {});
 Template.Track.helpers({
-	getTrack: function(){
-		return Session.get("trackResult");
-	},
+	getTrack: function(){ return Session.get("trackResult"); },
+	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Track.events({
 	'keypress #search-input'(event, instance){
@@ -134,11 +129,7 @@ Router.route('/', function () {
 });
 
 var searchKeyword = function(route_params){
-	Session.set("resultsType", "");
-	Session.set("numberResults", "");
-	Session.set("recLabel", "");
 	Session.set("resultsLabel", "Searching..");
-	Session.set("recResults", "");
 
 	var query = route_params.query;
 	var hash = route_params.hash;
@@ -158,16 +149,11 @@ var searchKeyword = function(route_params){
 		var t1 = performance.now();
 		var elapsed = (t1 - t0) / 1000;
 
-		Session.set("resultsLabel", "Results");
+		Session.set("globalLoading", false);
 		Session.set("mainResults", result);
 		Session.set("resultsType", class_type);
+		Session.set("resultsLabel", firstLetterCapital(class_type) + " " + "Results");
 		Session.set("numberResults", "Got " + result.length + " results in " + elapsed.toFixed(2) + " seconds");
-
-		if(result.length){
-			// TODO: meteor call to get recommendations
-			Session.set("recResults", result);
-			Session.set("recLabel", "Recommended " + firstLetterCapital(class_type) + "s");
-		}
 	});
 }
 
@@ -181,10 +167,12 @@ var lookupEntity = function(entity_session_var, id, class_type){
 			return;
 
 		Session.set(entity_session_var, result);
+		Session.set("globalLoading", false);
 	});
 }
 
 Router.route('/results', function () {
+	Session.set("globalLoading", true);
 	this.render('Results');
 	searchKeyword(this.params);
 }, {
@@ -193,6 +181,7 @@ Router.route('/results', function () {
 
 Router.route('/artist/:_id', function () {
 	Session.set("artistResult", null);
+	Session.set("globalLoading", true);
 	this.render('Artist');
 	lookupEntity("artistResult", this.params._id, 'artist');
 }, {
@@ -201,6 +190,7 @@ Router.route('/artist/:_id', function () {
 
 Router.route('/record/:_id', function () {
 	Session.set("recordResult", null);
+	Session.set("globalLoading", true);
 	this.render('Record');
 	lookupEntity("recordResult", this.params._id, 'record');
 }, {
@@ -209,6 +199,7 @@ Router.route('/record/:_id', function () {
 
 Router.route('/track/:_id', function () {
 	Session.set("trackResult", null);
+	Session.set("globalLoading", true);
 	this.render('Track');
 	lookupEntity("trackResult", this.params._id, 'track');
 }, {

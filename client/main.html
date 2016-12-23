@@ -17,150 +17,188 @@
 </template>
 
 <template name="Results">
-	<div class="container-fluid" style="background: #dddddd;">
+	<div class="top-bar container-fluid">
 		{{> Search}}
 	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 12px;" class="pull-right">{{getNumberOfResults}}</span>
-	</div>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">{{getResultsLabel}}</span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<!-- Results table -->
-		<table class="table table-hover">
-			{{#if isSearchType "artist"}}
-				{{> ArtistsTable results=getResults full=true }}
-			{{/if}}
 
-			{{#if isSearchType "record"}}
-				{{> RecordsTable results=getResults full=true }}
-			{{/if}}
+	{{#if loading}}
+		<div class="container-fluid" style="padding-top: 15px;">
+			<span style="font-size: 18px;">Loading..</span>
+		</div>
+	{{else}}
+		<div class="info-div">
+			<div class="container-fluid">
+				<span style="font-size: 12px;" class="pull-right">{{getNumberOfResults}}</span>
+			</div>
+			<div class="container-fluid">
+				<span style="font-size: 18px;">{{getResultsLabel}}</span>
+			</div>
+			<br>
+			<div class="container-fluid">
+				<!-- Results table -->
+				<table class="table table-hover">
+					{{#if isSearchType "artist"}}
+						{{> ArtistsTable results=getResults full=true }}
+					{{/if}}
 
-			{{#if isSearchType "track"}}
-				{{> TracksTable results=getResults full=true }}
-			{{/if}}
-		</table>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span id="rec" style="font-size: 18px;">{{getSearchLabel}}</span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<!-- Recommendation table -->
-		<table class="table table-hover">
-			{{#if isSearchType "artist"}}
-				{{> ArtistsTable results=getRecommendations full=true }}
-			{{/if}}
+					{{#if isSearchType "record"}}
+						{{> RecordsTable results=getResults full=true }}
+					{{/if}}
 
-			{{#if isSearchType "record"}}
-				{{> RecordsTable results=getRecommendations full=true }}
-			{{/if}}
-
-			{{#if isSearchType "track"}}
-				{{> TracksTable results=getRecommendations full=true }}
-			{{/if}}
-		</table>
-	</div>
-
+					{{#if isSearchType "track"}}
+						{{> TracksTable results=getResults full=true }}
+					{{/if}}
+				</table>
+			</div>
+		</div>
+	{{/if}}
 </template>
 
 <template name="Artist">
-	<div class="container-fluid" style="background: #dddddd;">
+	<div class="top-bar container-fluid">
 		{{> Search}}
 	</div>
-	<br>
-	<div class="container-fluid">
-		<img src={{getArtist.img}} class="img-rounded pull-left" style="margin-right: 10px;
-			width: 150px; height: 150px;"> <!-- Fixed width and height -->
-		<div class="pull-left">
-			<span style="font-size: 18px;"><b>{{getArtist.name}}</b>,</span>
-			<span style="font-size: 16px;"> {{getArtist.area}}</span><br>
-			<span style="font-size: 14px;">
-				<a href={{getArtist.homepage}}>{{getArtist.homepage}}</a>
-			</span>
+
+	{{#if loading}}
+		<div class="container-fluid" style="padding-top: 15px;">
+			<span style="font-size: 18px;">Loading..</span>
 		</div>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Biography</span><br>
-		<span style="font-size: 14px;">{{getArtist.biography}}</span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Discography</span><br>
-		<table class="table table-hover table-condensed">
-			{{> RecordsTable results=getArtist.records full=false }}
-		</table>
-	</div>
+	{{else}}
+		<div class="info-div">
+			<div class="pull-left content-div">
+				<div class="container-fluid">
+					<img src={{getArtist.img}} class="img-rounded pull-left" style="margin-right: 10px;
+						width: 150px; height: 150px;"> <!-- Fixed width and height -->
+					<div class="pull-left">
+						<span style="font-size: 18px;"><b>{{getArtist.name}}</b>,</span>
+						<span style="font-size: 16px;"> {{getArtist.area}}</span><br>
+						<span style="font-size: 14px;">
+							<a href={{getArtist.homepage}}>{{getArtist.homepage}}</a>
+						</span>
+					</div>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Biography</span><br>
+					<span style="font-size: 14px;">{{getArtist.biography}}</span>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Discography</span><br>
+					<table class="table table-hover table-condensed">
+						{{> RecordsTable results=getArtist.records full=false }}
+					</table>
+				</div>
+			</div>
+			<div class="pull-left recommendation-div">
+				{{> Recommendation classType="Artists"}}
+			</div>
+		</div>
+	{{/if}}
 </template>
 
 <template name="Record">
-	<div class="container-fluid" style="background: #dddddd;">
+	<div class="top-bar container-fluid">
 		{{> Search}}
 	</div>
-	<br>
-	<div class="container-fluid">
-		<img src={{getRecord.img}} class="img-rounded pull-left" style="margin-right: 10px;
-			width: 150px; height: 150px;"> <!-- Fixed width and height -->
-		<div class="pull-left">
-			<span style="font-size: 18px;"><b>{{getRecord.title}}, </b></span>
-			<span style="font-size: 16px;">
-				<a href="/artist/{{getRecord.artist_id}}">{{getRecord.artist}}</a>
-			</span><br>
-			<span style="font-size: 14px;">{{getRecord.ntracks}} Tracks</span>
+
+	{{#if loading}}
+		<div class="container-fluid" style="padding-top: 15px;">
+			<span style="font-size: 18px;">Loading..</span>
 		</div>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Description</span><br>
-		<span style="font-size: 14px;">{{getRecord.description}}</span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Tags</span><br>
-		{{#each getRecord.tags}}
-			<a href="/results?keyword={{this}}&type=tag">{{this}}</a>
-		{{/each}}
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Tracks</span><br>
-		<table class="table table-hover table-condensed">
-			{{> TracksTable results=getRecord.tracks full=false }}
-		</table>
-	</div>
+	{{else}}
+		<div class="info-div">
+			<div class="pull-left content-div">
+				<div class="container-fluid">
+					<img src={{getRecord.img}} class="img-rounded pull-left" style="margin-right: 10px;
+						width: 150px; height: 150px;"> <!-- Fixed width and height -->
+					<div class="pull-left">
+						<span style="font-size: 18px;"><b>{{getRecord.title}}, </b></span>
+						<span style="font-size: 16px;">
+							<a href="/artist/{{getRecord.artist_id}}">{{getRecord.artist}}</a>
+						</span><br>
+						<span style="font-size: 14px;">{{getRecord.ntracks}} Tracks</span>
+					</div>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Description</span><br>
+					<span style="font-size: 14px;">{{getRecord.description}}</span>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Tags</span><br>
+					{{#each getRecord.tags}}
+						<a href="/results?keyword={{this}}&type=tag">{{this}}</a>
+					{{/each}}
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Tracks</span><br>
+					<table class="table table-hover table-condensed">
+						{{> TracksTable results=getRecord.tracks full=false }}
+					</table>
+				</div>
+			</div>
+			<div class="pull-left recommendation-div">
+				{{> Recommendation classType="Records"}}
+			</div>
+		</div>
+	{{/if}}
 </template>
 
 <template name="Track">
-	<div class="container-fluid" style="background: #dddddd;">
+	<div class="top-bar container-fluid">
 		{{> Search}}
 	</div>
-	<br>
+
+	{{#if loading}}
+		<div class="container-fluid" style="padding-top: 15px;">
+			<span style="font-size: 18px;">Loading..</span>
+		</div>
+	{{else}}
+		<div class="info-div">
+			<div class="pull-left content-div">
+				<div class="container-fluid">
+					<span style="font-size: 18px;"><b>{{getTrack.title}}</b>, </span>
+					<span style="font-size: 16px;"><a href="/record/{{getTrack.record_id}}">{{getTrack.record}}</a></span><br>
+					<span style="font-size: 14px;"><a href="/artist/{{getTrack.artist_id}}">{{getTrack.artist}}</a></span>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">Lyrics</span><br>
+					<span style="font-size: 14px;">{{getTrack.lyrics}}</span>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<span style="font-size: 18px;">License</span><br>
+					<span style="font-size: 14px;"><a href={{getTrack.license}}>{{getTrack.license}}</a></span>
+				</div>
+			</div>
+			<div class="pull-left recommendation-div">
+				{{> Recommendation classType="Tracks"}}
+			</div>
+		</div>
+	{{/if}}
+</template>
+
+<template name="Recommendation">
 	<div class="container-fluid">
-		<span style="font-size: 18px;"><b>{{getTrack.title}}</b>, </span>
-		<span style="font-size: 16px;"><a href="/record/{{getTrack.record_id}}">{{getTrack.record}}</a></span><br>
-		<span style="font-size: 14px;"><a href="/artist/{{getTrack.artist_id}}">{{getTrack.artist}}</a></span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">Lyrics</span><br>
-		<span style="font-size: 14px;">{{getTrack.lyrics}}</span>
-	</div>
-	<br>
-	<div class="container-fluid">
-		<span style="font-size: 18px;">License</span><br>
-		<span style="font-size: 14px;"><a href={{getTrack.license}}>{{getTrack.license}}</a></span>
+		<div style="margin-bottom: 5px;">
+			<span style="font-size: 14px;">Recommended {{classType}}</span>
+		</div>
+		<div class="list-group">
+			<a href="#" class="list-group-item">First item</a>
+			<a href="#" class="list-group-item">Second item</a>
+			<a href="#" class="list-group-item">Third item</a>
+		</div>
 	</div>
 </template>
 
 <template name="Search">
-	<div id="top-bar" class="row">
-		<div class="pull-left">
-			<select id="search-type" class="form-control">
+	<div id="top-bar-inner">
+		<div class="pull-left" style="height: 100%; width: 10%;">
+			<select id="search-type" class="form-control" style="height: 100%;">
 				<option value="artist">Artist</option>
 				<option value="record">Record</option>
 				<option value="track">Track</option>
@@ -168,14 +206,8 @@
 				<option value="tag">Tag</option>
 			</select>
 		</div>
-		<div class="input-group" style="padding-left: 10px;">
-			<input id="search-input" type="text" class="form-control">
-			<div class="input-group-btn">
-				<!-- TODO: Find out how to fix the search button height in Chrome -->
-				<button id="search-btn" class="btn btn-default" type="button">
-					<i class="glyphicon glyphicon-search"></i>
-				</button>
-			</div>
+		<div class="pull-left" style="height: 100%; width: 90%; padding-left: 10px;">
+			<input id="search-input" type="text" class="form-control" style="height: 100%;">
 		</div>
 	</div>
 </template>
