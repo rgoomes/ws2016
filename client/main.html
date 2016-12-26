@@ -10,28 +10,28 @@
 		<div class="text-center">
 			<span style="font-size: 32px;">Mini Music</span>
 		</div>
-		<div class="container-fluid" style="padding-left: 20%; padding-right: 20%;">
+		<div class="container-fluid search-bar">
 			{{> Search}}
 		</div>
 	</div>
 </template>
 
 <template name="Results">
-	<div class="top-bar container-fluid">
+	<div class="top-search-bar container-fluid">
 		{{> Search}}
 	</div>
 
-	{{#if loading}}
+	{{#if onMessage}}
 		<div class="container-fluid" style="padding-top: 15px;">
-			<span style="font-size: 18px;">Loading..</span>
+			<span style="font-size: 18px;">{{getMessage}}</span>
 		</div>
 	{{else}}
 		<div class="info-div">
-			<div class="container-fluid">
-				<span style="font-size: 12px;" class="pull-right">{{getNumberOfResults}}</span>
-			</div>
-			<div class="container-fluid">
+			<div class="container-fluid pull-left" style="padding-top: 15px;">
 				<span style="font-size: 18px;">{{getResultsLabel}}</span>
+			</div>
+			<div class="container-fluid pull-right" style="padding-top: 5px;">
+				<span style="font-size: 12px;">{{getNumberOfResults}}</span>
 			</div>
 			<br>
 			<div class="container-fluid">
@@ -55,13 +55,13 @@
 </template>
 
 <template name="Artist">
-	<div class="top-bar container-fluid">
+	<div class="top-search-bar container-fluid">
 		{{> Search}}
 	</div>
 
-	{{#if loading}}
+	{{#if onMessage}}
 		<div class="container-fluid" style="padding-top: 15px;">
-			<span style="font-size: 18px;">Loading..</span>
+			<span style="font-size: 18px;">{{getMessage}}</span>
 		</div>
 	{{else}}
 		<div class="info-div">
@@ -71,7 +71,10 @@
 						width: 150px; height: 150px;"> <!-- Fixed width and height -->
 					<div class="pull-left">
 						<span style="font-size: 18px;"><b>{{getArtist.name}}</b>,</span>
-						<span style="font-size: 16px;"> {{getArtist.area}}</span><br>
+						<span style="font-size: 16px;">
+							<a href={{getArtist.area}}>{{getArtist.area}}</a>
+						</span>
+						<br>
 						<span style="font-size: 14px;">
 							<a href={{getArtist.homepage}}>{{getArtist.homepage}}</a>
 						</span>
@@ -80,7 +83,11 @@
 				<br>
 				<div class="container-fluid">
 					<span style="font-size: 18px;">Biography</span><br>
-					<span style="font-size: 14px;">{{getArtist.biography}}</span>
+					{{#if inner_html_renderization_enabled}}
+						<span style="font-size: 14px;">{{{getArtist.biography}}}</span>
+					{{else}}
+						<span style="font-size: 14px;">{{getArtist.biography}}</span>
+					{{/if}}
 				</div>
 				<br>
 				<div class="container-fluid">
@@ -91,20 +98,20 @@
 				</div>
 			</div>
 			<div class="pull-left recommendation-div">
-				{{> Recommendation classType="Artists"}}
+				{{> Recommendation classLabel="Similar Artists"}}
 			</div>
 		</div>
 	{{/if}}
 </template>
 
 <template name="Record">
-	<div class="top-bar container-fluid">
+	<div class="top-search-bar container-fluid">
 		{{> Search}}
 	</div>
 
-	{{#if loading}}
+	{{#if onMessage}}
 		<div class="container-fluid" style="padding-top: 15px;">
-			<span style="font-size: 18px;">Loading..</span>
+			<span style="font-size: 18px;">{{getMessage}}</span>
 		</div>
 	{{else}}
 		<div class="info-div">
@@ -123,7 +130,11 @@
 				<br>
 				<div class="container-fluid">
 					<span style="font-size: 18px;">Description</span><br>
-					<span style="font-size: 14px;">{{getRecord.description}}</span>
+					{{#if inner_html_renderization_enabled}}
+						<span style="font-size: 14px;">{{{getRecord.description}}}</span>
+					{{else}}
+						<span style="font-size: 14px;">{{getRecord.description}}</span>
+					{{/if}}
 				</div>
 				<br>
 				<div class="container-fluid">
@@ -141,20 +152,20 @@
 				</div>
 			</div>
 			<div class="pull-left recommendation-div">
-				{{> Recommendation classType="Records"}}
+				{{> Recommendation classLabel="Other recommended Records"}}
 			</div>
 		</div>
 	{{/if}}
 </template>
 
 <template name="Track">
-	<div class="top-bar container-fluid">
+	<div class="top-search-bar container-fluid">
 		{{> Search}}
 	</div>
 
-	{{#if loading}}
+	{{#if onMessage}}
 		<div class="container-fluid" style="padding-top: 15px;">
-			<span style="font-size: 18px;">Loading..</span>
+			<span style="font-size: 18px;">{{getMessage}}.</span>
 		</div>
 	{{else}}
 		<div class="info-div">
@@ -176,7 +187,7 @@
 				</div>
 			</div>
 			<div class="pull-left recommendation-div">
-				{{> Recommendation classType="Tracks"}}
+				{{> Recommendation classLabel="Tracks you may also like"}}
 			</div>
 		</div>
 	{{/if}}
@@ -185,13 +196,25 @@
 <template name="Recommendation">
 	<div class="container-fluid">
 		<div style="margin-bottom: 5px;">
-			<span style="font-size: 14px;">Recommended {{classType}}</span>
+			<span style="font-size: 14px;">{{classLabel}}</span>
 		</div>
-		<div class="list-group">
-			<a href="#" class="list-group-item">First item</a>
-			<a href="#" class="list-group-item">Second item</a>
-			<a href="#" class="list-group-item">Third item</a>
-		</div>
+
+		<table class="table table-hover table-condensed">
+			<thead>
+				<tr>
+					<th>Score</th>
+					<th>Name</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each rec}}
+					<tr>
+						<td>{{score}}</td>
+						<td><a href={{ref}}>{{name}}</a></td>
+					</tr>
+				{{/each}}
+			</tbody>
+		</table>
 	</div>
 </template>
 
@@ -227,7 +250,7 @@
 				<td><a href="/artist/{{artist_id}}">{{name}}</a></td>
 				<td><a href={{homepage}}>{{homepage}}</a></td>
 				<td>{{nrecords}}</td>
-				<td>{{area}}</td>
+				<td><a href={{area}}>{{area}}</a></td>
 			</tr>
 		{{/each}}
 	</tbody>

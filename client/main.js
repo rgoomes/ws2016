@@ -10,7 +10,21 @@ Session.setDefault("recordResult", null);
 Session.setDefault("artistResult", null);
 Session.setDefault("trackResult", null);
 Session.setDefault("resultsLabel", "");
-Session.setDefault("globalLoading", false);
+Session.setDefault("recommendationResults", []);
+
+Session.setDefault("message", "");
+Template.registerHelper("onMessage", function (){
+	return Session.get("message") != null;
+});
+Template.registerHelper("getMessage", function (){
+	return Session.get("message");
+});
+
+// NOTE: inner html rendering is not safe
+var enable_inner_html_rendering = false;
+Template.registerHelper("inner_html_renderization_enabled", function (){
+	return enable_inner_html_rendering;
+});
 
 var handleSearch = function(event, isClick){
 	if(isClick || event.which === 13){
@@ -60,7 +74,6 @@ Template.Results.helpers({
 	getResultsLabel: function(){ return Session.get("resultsLabel"); },
 	getNumberOfResults: function(){ return Session.get("numberResults"); },
 	getResults: function(){ return Session.get("mainResults"); },
-	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Results.events({
 	'keypress #search-input'(event, instance){
@@ -76,7 +89,6 @@ Template.Results.events({
 Template.Artist.onCreated(function ArtistOnCreated() {});
 Template.Artist.helpers({
 	getArtist: function(){ return Session.get("artistResult"); },
-	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Artist.events({
 	'keypress #search-input'(event, instance){
@@ -92,7 +104,6 @@ Template.Artist.events({
 Template.Record.onCreated(function RecordOnCreated() {});
 Template.Record.helpers({
 	getRecord: function(){ return Session.get("recordResult"); },
-	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Record.events({
 	'keypress #search-input'(event, instance){
@@ -108,7 +119,6 @@ Template.Record.events({
 Template.Track.onCreated(function TrackOnCreated() {});
 Template.Track.helpers({
 	getTrack: function(){ return Session.get("trackResult"); },
-	loading: function(){ return Session.get("globalLoading") == true; },
 });
 Template.Track.events({
 	'keypress #search-input'(event, instance){
@@ -120,6 +130,14 @@ Template.Track.events({
 });
 
 //
+// template Recommendation
+Template.Recommendation.onCreated(function RecommendationOnCreated() {});
+Template.Recommendation.helpers({
+	rec: function(){ return Session.get("recommendationResults"); }
+});
+Template.Recommendation.events({});
+
+//
 // Routers
 // TODO: remove meteor calls from routers
 Router.route('/', function () {
@@ -129,8 +147,6 @@ Router.route('/', function () {
 });
 
 var searchKeyword = function(route_params){
-	Session.set("resultsLabel", "Searching..");
-
 	var query = route_params.query;
 	var hash = route_params.hash;
 	var class_type = getClassType(query.type);
@@ -139,17 +155,18 @@ var searchKeyword = function(route_params){
 	Meteor.call('search', query.keyword.toLowerCase(), query.type, class_type, function(error, result){
 		if(error){
 			console.log(error);
+			Session.set("message", "Sorry! Some sort of error happened.");
 			return;
 		}
 		if(result == null){
-			Session.set("resultsLabel", "Sorry! Some sort of error happened.");
+			Session.set("message", "Sorry! Some sort of error happened.");
 			return;
 		}
 
 		var t1 = performance.now();
 		var elapsed = (t1 - t0) / 1000;
 
-		Session.set("globalLoading", false);
+		Session.set("message", null);
 		Session.set("mainResults", result);
 		Session.set("resultsType", class_type);
 		Session.set("resultsLabel", firstLetterCapital(class_type) + " " + "Results");
@@ -158,7 +175,24 @@ var searchKeyword = function(route_params){
 }
 
 var lookupEntity = function(entity_session_var, id, class_type){
-	Meteor.call('lookup', id, class_type, function(error, result){
+	var uri = "http://dbtune.org/jamendo/" + class_type + "/" + id;
+
+	Meteor.call('lookup', uri, class_type, function(error, result){
+		if(error){
+			console.log(error);
+			Session.set("message", "Sorry! Some sort of error happened.");
+			return;
+		}
+		if(result == null){
+			Session.set("message", "Sorry! Some sort of error happened.");
+			return;
+		}
+
+		Session.set(entity_session_var, result);
+		Session.set("message", null);
+	});
+
+	Meteor.call('recommendation', uri, class_type, function(error, result){
 		if(error){
 			console.log(error);
 			return;
@@ -166,13 +200,12 @@ var lookupEntity = function(entity_session_var, id, class_type){
 		if(result == null)
 			return;
 
-		Session.set(entity_session_var, result);
-		Session.set("globalLoading", false);
+		Session.set("recommendationResults", result);
 	});
 }
 
 Router.route('/results', function () {
-	Session.set("globalLoading", true);
+	Session.set("message", "Searching..");
 	this.render('Results');
 	searchKeyword(this.params);
 }, {
@@ -181,7 +214,9 @@ Router.route('/results', function () {
 
 Router.route('/artist/:_id', function () {
 	Session.set("artistResult", null);
-	Session.set("globalLoading", true);
+	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Artist');
 	lookupEntity("artistResult", this.params._id, 'artist');
 }, {
@@ -190,7 +225,9 @@ Router.route('/artist/:_id', function () {
 
 Router.route('/record/:_id', function () {
 	Session.set("recordResult", null);
-	Session.set("globalLoading", true);
+	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Record');
 	lookupEntity("recordResult", this.params._id, 'record');
 }, {
@@ -199,7 +236,9 @@ Router.route('/record/:_id', function () {
 
 Router.route('/track/:_id', function () {
 	Session.set("trackResult", null);
-	Session.set("globalLoading", true);
+	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Track');
 	lookupEntity("trackResult", this.params._id, 'track');
 }, {

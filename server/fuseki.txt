@@ -1,2 +1,9 @@
-./fuseki-server --update --mem /ds
-./s-put http://localhost:3030/ds/data default /path/to/clean_jamendo.nt
+>>> ./fuseki-server --update --mem /ds
+>>> ./s-put http://localhost:3030/ds/data default /path/to/clean_jamendo.nt
+
+or
+
+>>> ./fuseki-server --update --loc=Jamendo /ds
+>>> ./s-put http://localhost:3030/ds/data default /path/to/clean_jamendo.nt
+and then only
+>>> ./fuseki-server --loc=Jamendo /ds

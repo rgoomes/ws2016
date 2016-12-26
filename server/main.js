@@ -1,211 +1,15 @@
 import { Meteor } from 'meteor/meteor';
 import { HTTP } from 'meteor/http';
 
-function quote(str){
-	return "\"" + str + "\"";
-}
-
-function tag(str){
-	return "<" + str + ">";
-}
-
-function brace(str){
-	return "{" + str + "}";
-}
-
-function union(str){
-	return "UNION " + brace(str);
-}
-
-function entityQuery(keyword){
-	return "SELECT * " + "WHERE { " + tag(keyword) + " ?p ?o } ";
-}
+var no_image = "https://placeholdit.imgix.net/~text?txtsize=20&txt=No+Image%0Aavailable&w=150&h=150&txttrack=0";
 
 function getID(str){
 	return str.replace(/\D/g, '');
 }
 
-function getTrackLyrics(track_uri){
-	var sparql_query = "SELECT ?text " +
-		"WHERE { " +
-			"?performance <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Performance> . " +
-			"?performance <http://purl.org/NET/c4dm/event.owl#factor> ?lyrics . " +
-			"?lyrics <http://purl.org/ontology/mo/text> ?text . " +
-			"?performance <http://purl.org/ontology/mo/recorded_as> ?signal . " +
-			"?signal <http://purl.org/ontology/mo/published_as> " + tag(track_uri) + " . " +
-		"} ";
-
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return "No Lyrics available";
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
-	if(results == null || results.length == 0)
-		return "No Lyrics available";
-
-	return results[0].text.value;
-}
-
-function tracksQuery(keyword, limit){
-	return "SELECT DISTINCT ?track " +
-		"WHERE {{ " +
-			"?track <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Track> . " +
-			"?track <http://purl.org/dc/elements/1.1/title> ?title FILTER regex(LCASE(str(?title)), " + quote(keyword) + ") . " +
-		"} " +
-		"UNION { " +
-			"?artist <http://xmlns.com/foaf/0.1/name> " + quote(keyword) + " . " +
-			"?artist <http://xmlns.com/foaf/0.1/made> ?record . " +
-			"?record <http://purl.org/ontology/mo/track> ?track . " +
-		"} " +
-		"UNION { " +
-			"?performance <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Performance> . " +
-			"?performance <http://purl.org/NET/c4dm/event.owl#factor> ?lyrics . " +
-			"?lyrics <http://purl.org/ontology/mo/text> ?text FILTER regex(LCASE(str(?text)), " + quote(keyword) + ") . " +
-			"?performance <http://purl.org/ontology/mo/recorded_as> ?signal . " +
-			"?signal <http://purl.org/ontology/mo/published_as> ?track . " +
-		"}} " +
-		((limit == "inf") ? "" : "LIMIT " + limit);
-}
-
-function recordsQuery(keyword, limit){
-	return "SELECT DISTINCT ?record " +
-		"WHERE {{ " +
-			"?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record <http://purl.org/dc/elements/1.1/title> ?title FILTER regex(LCASE(str(?tile)), " + quote(keyword) + ") . " +
-		"} " +
-		"UNION { " +
-			"?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag . " +
-			"?tag <http://www.holygoat.co.uk/owl/redwood/0.1/tags/tagName> " + quote(keyword) + " . " +
-		"} " +
-		"UNION { " +
-			"?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record <http://purl.org/ontology/mo/track> ?track . " +
-			"?track <http://purl.org/dc/elements/1.1/title> ?title FILTER regex(LCASE(str(?title)), " + quote(keyword) + ") . " +
-		"} " +
-		"UNION { " +
-			"?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record <http://xmlns.com/foaf/0.1/maker> ?artist . " +
-			"?artist <http://xmlns.com/foaf/0.1/name> ?name FILTER regex(LCASE(str(?name)), " + quote(keyword) + ") . " +
-		"}} " +
-		((limit == "inf") ? "" : "LIMIT " + limit);
-}
-
-function genresQuery(keyword, limit) {
-	return "SELECT DISTINCT ?record " +
-		"WHERE { " +
-			"?record <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag . " +
-			"?tag <http://www.holygoat.co.uk/owl/redwood/0.1/tags/tagName> " + quote(keyword) + " . " +
-		"} " +
-		((limit == "inf") ? "" : "LIMIT " + limit);
-}
-
-function artistsQuery(keyword, limit) {
-	var query = "SELECT DISTINCT ?artist " +
-		"WHERE {{ " +
-			"?artist <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			"?artist <http://xmlns.com/foaf/0.1/name> ?name FILTER regex(LCASE(str(?name)), " + quote(keyword) + ") . " +
-		"} ";
-
-	// check for whitespaces
-	if((/\s/g.test(keyword)) == false){
-		query += "UNION { " +
-			"?artist <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			"?artist <http://xmlns.com/foaf/0.1/homepage> " + tag(keyword) + " . " +
-		"} ";
-	}
-
-	query += "UNION { " +
-			"?artist <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			"?artist <http://xmlns.com/foaf/0.1/made> ?record . " +
-			"?record <http://purl.org/ontology/mo/track> ?track . " +
-			"?track  <http://purl.org/dc/elements/1.1/title> ?title FILTER regex(LCASE(str(?title)), " + quote(keyword) + ") . " +
-		"} " +
-		"UNION { " +
-			"?artist <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			"?artist <http://purl.org/ontology/mo/biography> ?biography FILTER regex(str(?biography), " + quote(keyword) + ") . " +
-		"}} " +
-		((limit == "inf") ? "" : "LIMIT " + limit);
-
-	return query;
-}
-
-function getArtistName(artist_uri){
-	var sparql_query = "SELECT ?name " +
-		"WHERE { " +
-			tag(artist_uri) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			tag(artist_uri) + " <http://xmlns.com/foaf/0.1/name> ?name . " +
-		"} ";
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return "";
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
-	if(results == null || results.length == 0)
-		return "";
-
-	return results[0].name.value;
-}
-
-function getTrackArtistURI(track_uri){
-	var sparql_query = "SELECT ?artist_uri " +
-		"WHERE { " +
-			"?record <http://purl.org/ontology/mo/track> " + tag(track_uri) + " . " +
-			"?record <http://xmlns.com/foaf/0.1/maker> ?artist_uri . " +
-		"} ";
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return "";
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
-	if(results == null || results.length == 0)
-		return "";
-
-	return results[0].artist_uri.value;
-}
-
-function getRecordTitle(record_uri){
-	var sparql_query = "SELECT ?title " +
-		"WHERE { " +
-			tag(record_uri) + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			tag(record_uri) + " <http://purl.org/dc/elements/1.1/title> ?title . " +
-		"} ";
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return "";
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
-	if(results == null || results.length == 0)
-		return "";
-
-	return results[0].title.value;
-}
-
-function getTrackRecordURI(track_uri){
-	var sparql_query = "SELECT ?record_uri " +
-		"WHERE { " +
-			"?record_uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
-			"?record_uri <http://purl.org/ontology/mo/track> " + tag(track_uri) + " . " +
-		"} ";
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return "";
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
-	if(results == null || results.length == 0)
-		return "";
-
-	return results[0].record_uri.value;
-}
-
 function getTrack(track_uri, load_record){
 	var sparql_query = entityQuery(track_uri);
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return null;
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
+	var results = getQueryResults(sparql_query);
 	if(results == null || results.length == 0)
 		return null;
 
@@ -250,17 +54,13 @@ function getTrack(track_uri, load_record){
 
 function getRecord(record_uri, load_tracks){
 	var sparql_query = entityQuery(record_uri);
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return null;
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
+	var results = getQueryResults(sparql_query);
 	if(results == null || results.length == 0)
 		return null;
 
 	var record = {
 		record_id: getID(record_uri),
-		img: "http://placehold.it/150x150?text=No%20Image%0Aavailable",
+		img: no_image,
 		title: "",
 		type: "", /* Album or Single */
 		ntracks: 0, /* Number of tracks */
@@ -283,10 +83,8 @@ function getRecord(record_uri, load_tracks){
 			record.description = obj;
 		if(pred == "http://xmlns.com/foaf/0.1/maker" )
 			artist_uri = obj;
-		if(pred == "http://purl.org/ontology/mo/image" ){
-			// TODO: load image with the highest resolution
+		if(pred == "http://purl.org/ontology/mo/image" )
 			record.img = obj;
-		}
 		if(pred == "http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag"){
 			var parts = obj.split("/");
 			var tag = parts[parts.length - 1];
@@ -313,17 +111,13 @@ function getRecord(record_uri, load_tracks){
 
 function getArtist(artist_uri, load_records){
 	var sparql_query = entityQuery(artist_uri);
-	var sparql_results = runQuery(sparql_query);
-	if(sparql_results == null)
-		return null;
-
-	var results = JSON.parse(sparql_results.content).results.bindings;
+	var results = getQueryResults(sparql_query);
 	if(results == null || results.length == 0)
 		return null;
 
 	var artist = {
 		artist_id: getID(artist_uri),
-		img: "http://placehold.it/150x150?text=No%20Image%0Aavailable",
+		img: no_image,
 		name: "",
 		homepage: "",
 		area: "",
@@ -344,10 +138,8 @@ function getArtist(artist_uri, load_records){
 			artist.area = obj;
 		if(pred == "http://purl.org/ontology/mo/biography" )
 			artist.biography = obj;
-		if(pred == "http://purl.org/ontology/mo/image" ){
-			// TODO: load image with the highest resolution
+		if(pred == "http://xmlns.com/foaf/0.1/img" )
 			artist.img = obj;
-		}
 		if(pred == "http://xmlns.com/foaf/0.1/made" ){
 			// count records
 			artist.nrecords += 1;
@@ -364,54 +156,79 @@ function getArtist(artist_uri, load_records){
 	return artist;
 }
 
-function parseArtistResults(results){
-	var results = JSON.parse(results.content).results.bindings;
+function getSearchResults(keyword, type, class_type){
+	var sparql_query = getSearchQuery(keyword, type);
+	if(sparql_query == null)
+		return null;
 
-	var artists = [];
+	var results = getQueryResults(sparql_query);
+	if(results == null)
+		return null;
+
+	var search_results = [];
 	for(var i = 0; i < results.length; i++){
-		artist_uri = results[i].artist.value;
-		artists.push(getArtist(artist_uri, false));
+		if(class_type == "artist"){
+			var artist_uri = results[i].artist.value;
+			search_results.push(getArtist(artist_uri, false));
+		}
+		else if(class_type == "record"){
+			var record_uri = results[i].record.value;
+			search_results.push(getRecord(record_uri, false));
+		}
+		else if(class_type == "track"){
+			var track_uri = results[i].track.value;
+			search_results.push(getTrack(track_uri, true));
+		}
 	}
 
-	return artists;
+	return search_results;
 }
 
-function parseRecordResults(results){
-	var results = JSON.parse(results.content).results.bindings;
+function getRecommendationResults(entity_uri, class_type){
+	var sparql_query = getRecommendationQuery(entity_uri, class_type);
+	if(sparql_query == null)
+		return null;
 
-	var records = [];
+	var results = getQueryResults(sparql_query);
+	if(results == null)
+		return null;
+
+	var recommendations = []
 	for(var i = 0; i < results.length; i++){
-		record_uri = results[i].record.value;
-		records.push(getRecord(record_uri, false));
+		var rec = {name: "", ref: "", score: 0};
+
+		if(class_type === "artist"){
+			var artist_uri = results[i].recommended_artist.value;
+			rec.name = getArtistName(artist_uri);
+			rec.ref = "/artist/" + getID(artist_uri);
+		}
+		else if(class_type === "record"){
+			var record_uri = results[i].recommended_record.value;
+			rec.name = getRecordTitle(record_uri);
+			rec.ref = "/record/" + getID(record_uri);
+		}
+		else if(class_type === "track"){
+			var track_uri = results[i].recommended_track.value;
+			rec.name = getTrackTitle(track_uri);
+			rec.ref = "/track/" + getID(track_uri);
+		}
+
+		// TODO: advanced recommendation
+		// generating a random number to test sort
+		rec.score = Math.floor(Math.random() * 100);
+
+		recommendations.push(rec);
 	}
 
-	return records;
+	recommendations.sort(function(a, b){
+		return parseFloat(b.score) - parseFloat(a.score);
+	});
+
+	// return the top ten recommendations
+	return recommendations.slice(0, 10);
 }
 
-function parseTrackResults(results){
-	var results = JSON.parse(results.content).results.bindings;
-
-	var tracks = [];
-	for(var i = 0; i < results.length; i++){
-		track_uri = results[i].track.value;
-		tracks.push(getTrack(track_uri, true));
-	}
-
-	return tracks;
-}
-
-function parseResults(class_type, results){
-	switch(class_type){
-		case 'artist':
-			return parseArtistResults(results);
-		case 'record':
-			return parseRecordResults(results);
-		case 'track':
-			return parseTrackResults(results);
-	}
-}
-
-function getQuery(keyword, type){
+function getSearchQuery(keyword, type){
 	switch(type){
 		case 'artist':
 			return artistsQuery(keyword, "inf");
@@ -428,48 +245,37 @@ function getQuery(keyword, type){
 	}
 }
 
-function runQuery(sparql_query){
-	try {
-		return HTTP.call("GET", "http://localhost:3030/ds/query", {
-			params: {
-				query: sparql_query,
-				format: "json"
-			}
-		});
-	} catch(exception){
-		console.log("runQuery exception: ", exception);
-		return null;
+function getRecommendationQuery(entity_uri, type){
+	switch(type){
+		case 'artist':
+			return artistsRecommendationQuery(entity_uri, "100");
+		case 'record':
+			return recordsRecommendationQuery(entity_uri, "100");
+		case 'track':
+			return tracksRecommendationQuery(entity_uri, "100");
+		default:
+			return null;
 	}
 }
 
 Meteor.methods({
 	'search': function(keyword, type, class_type){
-		var sparql_query = getQuery(keyword, type);
-		if(sparql_query == null)
-			return null;
-
-		var results = runQuery(sparql_query);
-		if(results == null)
-			return null;
-
-		return parseResults(class_type, results);
+		return getSearchResults(keyword, type, class_type);
 	},
-	'lookup': function(id, class_type){
-		var result = null;
-
+	'recommendation': function(entity_uri, class_type){
+		return getRecommendationResults(entity_uri, class_type);
+	},
+	'lookup': function(uri, class_type){
 		switch(class_type){
 			case 'artist':
-				return getArtist("http://dbtune.org/jamendo/artist/" + id, true);
+				return getArtist(uri, true);
 			case 'record':
-				return getRecord("http://dbtune.org/jamendo/record/" + id, true);
+				return getRecord(uri, true);
 			case 'track':
-				return getTrack("http://dbtune.org/jamendo/track/" + id, true);
+				return getTrack(uri, true);
 			default:
 				return null;
 		}
-	},
-	'recommendation': function(list, class_type){
-		// TODO: integrate recommendation queries
 	}
 });
 
