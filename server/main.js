@@ -260,6 +260,10 @@ function getRecommendationQuery(entity_uri, type){
 
 Meteor.methods({
 	'search': function(keyword, type, class_type){
+		console.log("********")
+		console.log(type)
+		console.log(class_type)
+		console.log(keyword)
 		return getSearchResults(keyword, type, class_type);
 	},
 	'recommendation': function(entity_uri, class_type){
@@ -276,7 +280,98 @@ Meteor.methods({
 			default:
 				return null;
 		}
-	}
+	},
+	'semantic_search': function(keyword){
+		console.log(keyword)
+		var query = "select distinct ?p where {\
+					?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . \
+					?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . \
+					FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword.toLowerCase() + "\"))\
+					}";
+    	var res = HTTP.call("GET", "http://dbpedia.org/sparql", {
+			params: {
+				'query': query,
+				'format': "json"
+			}
+		});
+		try {
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "genre";
+		} catch (err) {
+			console.log("No results found for genre!");
+		}
+
+		var query = "select distinct ?p where {\
+					?p ?o <http://dbpedia.org/ontology/Album> . \
+					?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
+					FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword.toLowerCase() + "\"))\
+					}";
+		var res = HTTP.call("GET", "http://dbpedia.org/sparql", {
+			params: {
+				'query': query,
+				'format': "json"
+			}
+		});
+		try {
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "record";
+		} catch (err) {
+			console.log("No results found for records!");
+		}
+
+		var query = "select distinct ?p where {\
+				?p ?o <http://dbpedia.org/ontology/Band> . \
+				?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
+				FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword.toLowerCase() + "\"))\
+				}";
+		var res = HTTP.call("GET", "http://dbpedia.org/sparql", {
+			params: {
+				'query': query,
+				'format': "json"
+			}
+		});
+		try {
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "artist";
+		} catch (err) {
+			var query_ = "select distinct ?p where {\
+						?p ?o <http://dbpedia.org/ontology/MusicalArtist> . \
+						?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
+						FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword.toLowerCase() + "\"))\
+						}";
+			var res_ = HTTP.call("GET", "http://dbpedia.org/sparql", {
+				params: {
+					'query': query_,
+					'format': "json"
+				}
+			});
+			try {
+				console.log(JSON.parse(res_.content).results.bindings[0].p.value);
+				return "artist";
+			} catch (err_) {
+				console.log("No results found for artists!");
+			}
+		}
+
+		var query="select distinct ?p where {\
+				?p ?o <http://dbpedia.org/ontology/Song> . \
+				?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
+				FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword.toLowerCase() + "\"))\
+				}";
+		var res = HTTP.call("GET", "http://dbpedia.org/sparql", {
+			params: {
+				'query': query,
+				'format': "json"
+			}
+		});
+		try {
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "track";
+		} catch (err) {
+			console.log("No results found for songs!");
+			return null;
+		}
+	},
 });
 
 Meteor.startup(() => {
