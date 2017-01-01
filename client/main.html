@@ -27,29 +27,38 @@
 		</div>
 	{{else}}
 		<div class="info-div">
-			<div class="container-fluid pull-left" style="padding-top: 15px;">
-				<span style="font-size: 18px;">{{getResultsLabel}}</span>
-			</div>
-			<div class="container-fluid pull-right" style="padding-top: 5px;">
-				<span style="font-size: 12px;">{{getNumberOfResults}}</span>
-			</div>
-			<br>
-			<div class="container-fluid">
-				<!-- Results table -->
-				<table class="table table-hover">
-					{{#if isSearchType "artist"}}
-						{{> ArtistsTable results=getResults full=true }}
-					{{/if}}
+			{{#if getArtistResults}}
+				<div class="container-fluid pull-left" style="padding-top: 15px;">
+					<button id="btn-hide-artists" class="btn btn-default"><span style="font-size: 16px;">Artist Results</span></button>
+				</div>
+				<div class="container-fluid">
+					<table id="table-artists" class="table table-hover">
+						{{> ArtistsTable results=getArtistResults full=true }}
+					</table>
+				</div>
+			{{/if}}
 
-					{{#if isSearchType "record"}}
-						{{> RecordsTable results=getResults full=true }}
-					{{/if}}
+			{{#if getRecordResults}}
+				<div class="container-fluid pull-left" style="padding-top: 15px;">
+					<button id="btn-hide-records" class="btn btn-default"><span style="font-size: 16px;">Record Results</span></button>
+				</div>
+				<div class="container-fluid">
+					<table id="table-records" class="table table-hover">
+						{{> RecordsTable results=getRecordResults full=true }}
+					</table>
+				</div>
+			{{/if}}
 
-					{{#if isSearchType "track"}}
-						{{> TracksTable results=getResults full=true }}
-					{{/if}}
-				</table>
-			</div>
+			{{#if getTrackResults}}
+				<div class="container-fluid pull-left" style="padding-top: 15px;">
+					<button id="btn-hide-tracks" class="btn btn-default"><span style="font-size: 16px;">Track Results</span></button>
+				</div>
+				<div class="container-fluid">
+					<table id="table-tracks" class="table table-hover">
+						{{> TracksTable results=getTrackResults full=true }}
+					</table>
+				</div>
+			{{/if}}
 		</div>
 	{{/if}}
 </template>

@@ -298,44 +298,62 @@ function getAboutDBpediaQuery(keyword, values){
 	return query;
 }
 
-function getSemanticType(keyword){
-	var query = "select distinct ?p where {" +
-		"?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . " +
-		"?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . " +
-		"FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\" || lcase(str(?g)) = \"" + keyword + " music\"))" +
-	"} LIMIT 1";
-	var res = runDBpediaQuery(query);
-	if(JSON.parse(res.content).results.bindings.length)
-		return "genre";
-	else
-		console.log("No results found for genre!");
+function getSemanticType(keyword, class_type){
+	if(class_type === "record"){
+		var query = "select distinct ?p where {" +
+			"?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . " +
+			"?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . " +
+			"FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\" || lcase(str(?g)) = \"" + keyword + " music\"))" +
+		"} LIMIT 1";
+		var res = runDBpediaQuery(query);
+		if(JSON.parse(res.content).results.bindings.length){
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "genre";
+		} else {
+			console.log("No results found for genre!");
+		}
 
-	var query = getAboutDBpediaQuery(keyword, ["Album", /* "Single" */ ]);
-	var res = runDBpediaQuery(query);
-	if(JSON.parse(res.content).results.bindings.length)
-		return "record";
-	else
-		console.log("No results found for records!");
+		var query = getAboutDBpediaQuery(keyword, ["Album", /* "Single" */ ]);
+		var res = runDBpediaQuery(query);
+		if(JSON.parse(res.content).results.bindings.length){
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "record";
+		} else {
+			console.log("No results found for records!");
+			return null;
+		}
+	}
 
-	var query = getAboutDBpediaQuery(keyword, ["Band", "MusicalArtist"]);
-	var res = runDBpediaQuery(query);
-	if(JSON.parse(res.content).results.bindings.length)
-		return "artist";
-	else
-		console.log("No results found for artists!");
+	if(class_type === "artist"){
+		var query = getAboutDBpediaQuery(keyword, ["Band", "MusicalArtist"]);
+		var res = runDBpediaQuery(query);
+		if(JSON.parse(res.content).results.bindings.length){
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "artist";
+		} else {
+			console.log("No results found for artists!");
+			return null;
+		}
+	}
 
-	var query = getAboutDBpediaQuery(keyword, ["Song", "Work"]);
-	var res = runDBpediaQuery(query);
-	if(JSON.parse(res.content).results.bindings.length)
-		return "track";
-	else
-		console.log("No results found for songs!");
+	if(class_type === "track"){
+		var query = getAboutDBpediaQuery(keyword, ["Song", "Work"]);
+		var res = runDBpediaQuery(query);
+		if(JSON.parse(res.content).results.bindings.length){
+			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			return "track";
+		} else {
+			console.log("No results found for songs!");
+			return null;
+		}
+	}
 
 	return null;
 }
 
 Meteor.methods({
 	'search': function(keyword, type, class_type){
+		this.unblock();
 		return getSearchResults(keyword, type, class_type);
 	},
 	'recommendation': function(entity_uri, class_type){
@@ -353,8 +371,9 @@ Meteor.methods({
 				return null;
 		}
 	},
-	'semantic_search': function(keyword){
-		return getSemanticType(keyword);
+	'semantic_search': function(keyword, class_type){
+		this.unblock();
+		return getSemanticType(keyword, class_type);
 	},
 });
 

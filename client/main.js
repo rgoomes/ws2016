@@ -3,7 +3,26 @@ import { Session } from 'meteor/session'
 
 import './main.html';
 
-Session.setDefault("mainResults", null);
+var no_results = 0;
+var hasFoundResults = false;
+
+var callID = 0;
+var getNewID = function(){
+	var newID = callID;
+	callID += 1;
+	return newID;
+}
+
+Session.setDefault("mainTrackResults", null);
+Session.setDefault("mainRecordResults", null);
+Session.setDefault("mainArtistResults", null);
+
+var clearMainResults = function(){
+	Session.set("mainTrackResults", null);
+	Session.set("mainRecordResults", null);
+	Session.set("mainArtistResults", null);
+}
+
 Session.setDefault("resultsType", null);
 Session.setDefault("numberResults", "");
 Session.setDefault("recordResult", null);
@@ -70,10 +89,10 @@ Template.Home.events({
 // template Results
 Template.Results.onCreated(function ResultsOnCreated() {});
 Template.Results.helpers({
-	isSearchType: function(type){ return type == Session.get("resultsType"); },
-	getResultsLabel: function(){ return Session.get("resultsLabel"); },
-	getNumberOfResults: function(){ return Session.get("numberResults"); },
-	getResults: function(){ return Session.get("mainResults"); },
+	getTrackResults: function(){ return Session.get("mainTrackResults"); },
+	getRecordResults: function(){ return Session.get("mainRecordResults"); },
+	getArtistResults: function(){ return Session.get("mainArtistResults"); },
+
 });
 Template.Results.events({
 	'keypress #search-input'(event, instance){
@@ -81,6 +100,25 @@ Template.Results.events({
 	},
 	'click #search-btn'(event, instance){
 		handleSearch(event, true);
+	},
+
+	'click #btn-hide-artists'(event, instance){
+		if($('#table-artists').is(':visible'))
+			$('#table-artists').hide();
+		else
+			$('#table-artists').show();
+	},
+	'click #btn-hide-tracks'(event, instance){
+		if($('#table-tracks').is(':visible'))
+			$('#table-tracks').hide();
+		else
+			$('#table-tracks').show();
+	},
+	'click #btn-hide-records'(event, instance){
+		if($('#table-records').is(':visible'))
+			$('#table-records').hide();
+		else
+			$('#table-records').show()
 	}
 });
 
@@ -147,22 +185,34 @@ Router.route('/', function () {
 });
 
 var semanticSearch = function(route_params){
-	Meteor.call('semantic_search', route_params.query.keyword.toLowerCase(), function(error, result) {
-		if(result != null)
-			searchKeyword(route_params, result);
-		else {
-			Session.set("message", "Sorry! No results found.");
-		}
-	});
+	var all = ["artist", "record", "track"];
+	var newID = getNewID();
+
+	for(var i = 0; i < all.length; i++){
+		Meteor.call('semantic_search', route_params.query.keyword.toLowerCase(), all[i], function(error, result) {
+			if(result != null)
+				searchKeyword(route_params, result, newID);
+			else {
+				no_results += 1;
+
+				// if the semantic_search failed for all entities
+				// start a normal keyword search for all entities
+				if(no_results == 3){
+					searchKeyword(route_params, "artist", newID);
+					searchKeyword(route_params, "record", newID);
+					searchKeyword(route_params, "track", newID);
+				}
+			}
+		});
+	}
 }
 
-var searchKeyword = function(route_params, hasType){
+var searchKeyword = function(route_params, hasType, newID){
 	var query = route_params.query;
 	var hash = route_params.hash;
 	var type = hasType ? hasType : query.type;
 	var class_type = getClassType(type);
 
-	var t0 = performance.now();
 	Meteor.call('search', query.keyword.toLowerCase(), type, class_type, function(error, result){
 		if(error){
 			console.log(error);
@@ -173,15 +223,22 @@ var searchKeyword = function(route_params, hasType){
 			Session.set("message", "Sorry! Some sort of error happened.");
 			return;
 		}
+		if(callID != newID+1)
+			return;
 
-		var t1 = performance.now();
-		var elapsed = (t1 - t0) / 1000;
+		if(result.length == 0 && !hasFoundResults)
+			Session.set("message", "Sorry! No results found.");
+		else {
+			hasFoundResults = true;
+			Session.set("message", null);
+		}
 
-		Session.set("message", null);
-		Session.set("mainResults", result);
-		Session.set("resultsType", class_type);
-		Session.set("resultsLabel", firstLetterCapital(class_type) + " " + "Results");
-		Session.set("numberResults", "Got " + result.length + " results in " + elapsed.toFixed(2) + " seconds");
+		if(class_type === "artist")
+			Session.set("mainArtistResults", result);
+		if(class_type === "record")
+			Session.set("mainRecordResults", result);
+		if(class_type === "track")
+			Session.set("mainTrackResults", result);
 	});
 }
 
@@ -216,13 +273,18 @@ var lookupEntity = function(entity_session_var, id, class_type){
 }
 
 Router.route('/results', function () {
+	hasFoundResults = false;
 	Session.set("message", "Searching..");
+	clearMainResults();
 	this.render('Results');
 
-	if(this.params.query.type === "semantic_search")
+	if(this.params.query.type === "semantic_search"){
+		no_results = 0;
 		semanticSearch(this.params);
-	else
-		searchKeyword(this.params, null);
+	} else {
+		var newID = getNewID();
+		searchKeyword(this.params, null, newID);
+	}
 }, {
 	name: 'results'
 });
