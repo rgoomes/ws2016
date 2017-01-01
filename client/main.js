@@ -149,11 +149,28 @@ Router.route('/', function () {
 var searchKeyword = function(route_params){
 	var query = route_params.query;
 	var hash = route_params.hash;
-	var class_type = getClassType(query.type);
+	var type = ""
+	var class_type = ""
+
+	if (query.type === "semantic_search") {
+		Meteor.call('semantic_search', query.keyword, function(error, result) {
+			if (result != null) {
+				Session.set("type", result)
+			}
+		});
+	}
+	else {
+		Session.set("type", query.type)
+	}
+	class_type = getClassType(Session.get("type"))
 
 	var t0 = performance.now();
-	Meteor.call('search', query.keyword.toLowerCase(), query.type, class_type, function(error, result){
+	console.log(Session.get("type"))
+	console.log(class_type)
+	console.log(query.keyword)
+	Meteor.call('search', query.keyword.toLowerCase(), Session.get("type"), class_type, function(error, result){		
 		if(error){
+			console.log("asd")
 			console.log(error);
 			Session.set("message", "Sorry! Some sort of error happened.");
 			return;
