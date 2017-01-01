@@ -3,6 +3,14 @@ import { HTTP } from 'meteor/http';
 
 var no_image = "https://placeholdit.imgix.net/~text?txtsize=20&txt=No+Image%0Aavailable&w=150&h=150&txttrack=0";
 
+function brace(str){
+	return "{" + str + "}";
+}
+
+function union(str){
+	return "UNION " + brace(str);
+}
+
 function getID(str){
 	return str.replace(/\D/g, '');
 }
@@ -272,51 +280,56 @@ function runDBpediaQuery(query){
 	}
 }
 
+function getAboutDBpediaQuery(keyword, values){
+	var query = "select distinct ?p where {";
+
+	for(var i = 0; i < values.length; i++){
+		var match = "?p ?o <http://dbpedia.org/ontology/" + values[i] + "> . " +
+			"?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . " +
+			"FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\" || lcase(str(?g)) = \"" + keyword + " (" + values[i].toLowerCase() + ")\"))";
+
+		if(i == 0)
+			query += brace(match);
+		else
+			query += union(match);
+	}
+
+	query += "} LIMIT 1";
+	return query;
+}
+
 function getSemanticType(keyword){
-	var query = "select distinct ?p where {\
-		?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . \
-		?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . \
-		FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\"))\
-	}";
+	var query = "select distinct ?p where {" +
+		"?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . " +
+		"?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . " +
+		"FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\" || lcase(str(?g)) = \"" + keyword + " music\"))" +
+	"} LIMIT 1";
 	var res = runDBpediaQuery(query);
 	if(JSON.parse(res.content).results.bindings.length)
 		return "genre";
+	else
+		console.log("No results found for genre!");
 
-	var query = "select distinct ?p where {\
-		?p ?o <http://dbpedia.org/ontology/Album> . \
-		?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
-		FILTER((LANG(?g) = \"\" || LANGMATCHES(LANG(?g), \"en\")) && (lcase(str(?g)) = \"" + keyword + "\"))\
-	}";
+	var query = getAboutDBpediaQuery(keyword, ["Album", /* "Single" */ ]);
 	var res = runDBpediaQuery(query);
 	if(JSON.parse(res.content).results.bindings.length)
 		return "record";
+	else
+		console.log("No results found for records!");
 
-	var query = "select distinct ?p where {\
-		?p ?o <http://dbpedia.org/ontology/Band> . \
-		?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
-		FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword + "\"))\
-	}";
+	var query = getAboutDBpediaQuery(keyword, ["Band", "MusicalArtist"]);
 	var res = runDBpediaQuery(query);
 	if(JSON.parse(res.content).results.bindings.length)
 		return "artist";
+	else
+		console.log("No results found for artists!");
 
-	var query = "select distinct ?p where {\
-		?p ?o <http://dbpedia.org/ontology/MusicalArtist> . \
-		?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
-		FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword + "\"))\
-	}";
-	var res = runDBpediaQuery(query);
-	if(JSON.parse(res.content).results.bindings.length)
-		return "artist";
-
-	var query = "select distinct ?p where {\
-		?p ?o <http://dbpedia.org/ontology/Song> . \
-		?p <http://www.w3.org/2000/01/rdf-schema#label> ?n . \
-		FILTER((LANG(?n) = \"\" || LANGMATCHES(LANG(?n), \"en\")) && (lcase(str(?n)) = \"" + keyword + "\"))\
-	}";
+	var query = getAboutDBpediaQuery(keyword, ["Song", "Work"]);
 	var res = runDBpediaQuery(query);
 	if(JSON.parse(res.content).results.bindings.length)
 		return "track";
+	else
+		console.log("No results found for songs!");
 
 	return null;
 }
