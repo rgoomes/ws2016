@@ -214,6 +214,8 @@ Router.route('/results', function () {
 
 Router.route('/artist/:_id', function () {
 	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Artist');
 	lookupEntity("artistResult", this.params._id, 'artist');
 }, {
@@ -222,6 +224,8 @@ Router.route('/artist/:_id', function () {
 
 Router.route('/record/:_id', function () {
 	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Record');
 	lookupEntity("recordResult", this.params._id, 'record');
 }, {
@@ -230,6 +234,8 @@ Router.route('/record/:_id', function () {
 
 Router.route('/track/:_id', function () {
 	Session.set("message", "Loading..");
+	Session.set("recommendationResults", []);
+
 	this.render('Track');
 	lookupEntity("trackResult", this.params._id, 'track');
 }, {

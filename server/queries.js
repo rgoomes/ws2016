@@ -137,7 +137,7 @@ artistsQuery = function(keyword, limit) {
 		"} " +
 		"UNION { " +
 			"?artist <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
-			"?artist <http://purl.org/ontology/mo/biography> ?biography FILTER regex(str(?biography), " + quote(keyword) + ") . " +
+			"?artist <http://purl.org/ontology/mo/biography> ?biography FILTER regex(LCASE(str(?biography)), " + quote(keyword) + ") . " +
 		"}} " +
 		((limit == "inf") ? "" : "LIMIT " + limit);
 

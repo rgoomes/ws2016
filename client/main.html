@@ -291,8 +291,8 @@
 	<thead>
 		<tr>
 			<th>Title</th>
-			<th>Artist</th>
 			{{#if full}}
+			<th>Artist</th>
 			<th>Record</th>
 			{{/if}}
 			<th>Track Number</th>
@@ -303,8 +303,8 @@
 		{{#each results}}
 			<tr>
 				<td><a href="/track/{{track_id}}">{{title}}</a></td>
-				<td><a href="/artist/{{artist_id}}">{{artist}}</a></td>
 				{{#if ../full}}
+				<td><a href="/artist/{{artist_id}}">{{artist}}</a></td>
 				<td><a href="/record/{{record_id}}">{{record}}</a></td>
 				{{/if}}
 				<td>{{number}}</td>
