@@ -226,9 +226,12 @@ var searchKeyword = function(route_params, hasType, newID){
 		if(callID != newID+1)
 			return;
 
-		if(result.length == 0 && !hasFoundResults)
-			Session.set("message", "Sorry! No results found.");
-		else {
+		if(result.length == 0){
+			if(!hasFoundResults){
+				Session.set("message", "Sorry! No results found.");
+			}
+		}
+		else{
 			hasFoundResults = true;
 			Session.set("message", null);
 		}

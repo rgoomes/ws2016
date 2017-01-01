@@ -313,7 +313,7 @@ function getSemanticType(keyword, class_type){
 			console.log("No results found for genre!");
 		}
 
-		var query = getAboutDBpediaQuery(keyword, ["Album", /* "Single" */ ]);
+		var query = getAboutDBpediaQuery(keyword, ["Album", "Single"]);
 		var res = runDBpediaQuery(query);
 		if(JSON.parse(res.content).results.bindings.length){
 			console.log(JSON.parse(res.content).results.bindings[0].p.value);
