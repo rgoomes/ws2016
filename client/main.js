@@ -146,31 +146,25 @@ Router.route('/', function () {
 	name: 'home'
 });
 
-var searchKeyword = function(route_params){
+var semanticSearch = function(route_params){
+	Meteor.call('semantic_search', route_params.query.keyword.toLowerCase(), function(error, result) {
+		if(result != null)
+			searchKeyword(route_params, result);
+		else {
+			Session.set("message", "Sorry! No results found.");
+		}
+	});
+}
+
+var searchKeyword = function(route_params, hasType){
 	var query = route_params.query;
 	var hash = route_params.hash;
-	var type = ""
-	var class_type = ""
-
-	if (query.type === "semantic_search") {
-		Meteor.call('semantic_search', query.keyword, function(error, result) {
-			if (result != null) {
-				Session.set("type", result)
-			}
-		});
-	}
-	else {
-		Session.set("type", query.type)
-	}
-	class_type = getClassType(Session.get("type"))
+	var type = hasType ? hasType : query.type;
+	var class_type = getClassType(type);
 
 	var t0 = performance.now();
-	console.log(Session.get("type"))
-	console.log(class_type)
-	console.log(query.keyword)
-	Meteor.call('search', query.keyword.toLowerCase(), Session.get("type"), class_type, function(error, result){		
+	Meteor.call('search', query.keyword.toLowerCase(), type, class_type, function(error, result){
 		if(error){
-			console.log("asd")
 			console.log(error);
 			Session.set("message", "Sorry! Some sort of error happened.");
 			return;
@@ -224,7 +218,11 @@ var lookupEntity = function(entity_session_var, id, class_type){
 Router.route('/results', function () {
 	Session.set("message", "Searching..");
 	this.render('Results');
-	searchKeyword(this.params);
+
+	if(this.params.query.type === "semantic_search")
+		semanticSearch(this.params);
+	else
+		searchKeyword(this.params, null);
 }, {
 	name: 'results'
 });
