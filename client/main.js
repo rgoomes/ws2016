@@ -98,7 +98,7 @@ Template.Home.events({
 //
 // template Results
 Template.Results.onCreated(function ResultsOnCreated() {});
-Template.Results.onRendered(function ResultsOnCreated() {
+Template.Results.onRendered(function ResultsOnRendered() {
 	setComboValue();
 });
 Template.Results.helpers({
@@ -139,7 +139,7 @@ Template.Results.events({
 //
 // template Artist
 Template.Artist.onCreated(function ArtistOnCreated() {});
-Template.Artist.onRendered(function ArtistOnCreated() {
+Template.Artist.onRendered(function ArtistOnRendered() {
 	setComboValue();
 });
 Template.Artist.helpers({
@@ -157,7 +157,7 @@ Template.Artist.events({
 //
 // template Record
 Template.Record.onCreated(function RecordOnCreated() {});
-Template.Record.onRendered(function RecordOnCreated() {
+Template.Record.onRendered(function RecordOnRendered() {
 	setComboValue();
 });
 Template.Record.helpers({
@@ -175,7 +175,7 @@ Template.Record.events({
 //
 // template Track
 Template.Track.onCreated(function TrackOnCreated() {});
-Template.Track.onRendered(function TrackOnCreated() {
+Template.Track.onRendered(function TrackOnRendered() {
 	setComboValue();
 });
 Template.Track.helpers({
