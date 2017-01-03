@@ -6,6 +6,15 @@ import './main.html';
 var no_results = 0;
 var hasFoundResults = false;
 
+
+var combo = "semantic_search";
+var setComboValue = function(){
+	if(combo == null || combo == "")
+		combo = "semantic_search";
+
+	$("#search-type").val(combo);
+}
+
 var callID = 0;
 var getNewID = function(){
 	var newID = callID;
@@ -49,6 +58,7 @@ var handleSearch = function(event, isClick){
 	if(isClick || event.which === 13){
 		var type = $('#search-type').val();
 		var text = $('#search-input').val();
+		combo = type;
 
 		if(text){
 			var keyword = 'keyword' + '=' + text;
@@ -88,10 +98,14 @@ Template.Home.events({
 //
 // template Results
 Template.Results.onCreated(function ResultsOnCreated() {});
+Template.Results.onRendered(function ResultsOnCreated() {
+	setComboValue();
+});
 Template.Results.helpers({
 	getTrackResults: function(){ return Session.get("mainTrackResults"); },
 	getRecordResults: function(){ return Session.get("mainRecordResults"); },
 	getArtistResults: function(){ return Session.get("mainArtistResults"); },
+	getNumberOfResults: function(){ return Session.get("numberResults"); },
 
 });
 Template.Results.events({
@@ -125,6 +139,9 @@ Template.Results.events({
 //
 // template Artist
 Template.Artist.onCreated(function ArtistOnCreated() {});
+Template.Artist.onRendered(function ArtistOnCreated() {
+	setComboValue();
+});
 Template.Artist.helpers({
 	getArtist: function(){ return Session.get("artistResult"); },
 });
@@ -140,6 +157,9 @@ Template.Artist.events({
 //
 // template Record
 Template.Record.onCreated(function RecordOnCreated() {});
+Template.Record.onRendered(function RecordOnCreated() {
+	setComboValue();
+});
 Template.Record.helpers({
 	getRecord: function(){ return Session.get("recordResult"); },
 });
@@ -155,6 +175,9 @@ Template.Record.events({
 //
 // template Track
 Template.Track.onCreated(function TrackOnCreated() {});
+Template.Track.onRendered(function TrackOnCreated() {
+	setComboValue();
+});
 Template.Track.helpers({
 	getTrack: function(){ return Session.get("trackResult"); },
 });
@@ -190,29 +213,37 @@ var semanticSearch = function(route_params){
 
 	for(var i = 0; i < all.length; i++){
 		Meteor.call('semantic_search', route_params.query.keyword.toLowerCase(), all[i], function(error, result) {
-			if(result != null)
-				searchKeyword(route_params, result, newID);
+			if(result != null){
+				// genres like pop-rock are stored in dbpedia as "pop rock", with spaces
+				// while in jamendo all genres have no spaces like "poprock". to fix this
+				// issue, the whitespaces are removed in the genres keywords
+				if(result === "genre")
+					route_params.query.keyword = route_params.query.keyword.replace(/\s/g, '');
+
+				searchKeyword(route_params, result, newID, false);
+			}
 			else {
 				no_results += 1;
 
 				// if the semantic_search failed for all entities
 				// start a normal keyword search for all entities
 				if(no_results == 3){
-					searchKeyword(route_params, "artist", newID);
-					searchKeyword(route_params, "record", newID);
-					searchKeyword(route_params, "track", newID);
+					searchKeyword(route_params, "artist", newID, false);
+					searchKeyword(route_params, "record", newID, false);
+					searchKeyword(route_params, "track", newID, false);
 				}
 			}
 		});
 	}
 }
 
-var searchKeyword = function(route_params, hasType, newID){
+var searchKeyword = function(route_params, hasType, newID, showElapsedTime){
 	var query = route_params.query;
 	var hash = route_params.hash;
 	var type = hasType ? hasType : query.type;
 	var class_type = getClassType(type);
 
+	var t0 = performance.now();
 	Meteor.call('search', query.keyword.toLowerCase(), type, class_type, function(error, result){
 		if(error){
 			console.log(error);
@@ -235,6 +266,14 @@ var searchKeyword = function(route_params, hasType, newID){
 			hasFoundResults = true;
 			Session.set("message", null);
 		}
+
+		var t1 = performance.now();
+		var elapsed = (t1 - t0) / 1000;
+
+		if(showElapsedTime)
+			Session.set("numberResults", "Got " + result.length + " results in " + elapsed.toFixed(2) + " seconds");
+		else
+			Session.set("numberResults", "");
 
 		if(class_type === "artist")
 			Session.set("mainArtistResults", result);
@@ -286,7 +325,7 @@ Router.route('/results', function () {
 		semanticSearch(this.params);
 	} else {
 		var newID = getNewID();
-		searchKeyword(this.params, null, newID);
+		searchKeyword(this.params, null, newID, true);
 	}
 }, {
 	name: 'results'

@@ -300,6 +300,7 @@ function getAboutDBpediaQuery(keyword, values){
 
 function getSemanticType(keyword, class_type){
 	if(class_type === "record"){
+		console.log("Searching DBpedia for genres..");
 		var query = "select distinct ?p where {" +
 			"?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/MusicGenre> . " +
 			"?p <http://www.w3.org/2000/01/rdf-schema#label> ?g . " +
@@ -307,16 +308,17 @@ function getSemanticType(keyword, class_type){
 		"} LIMIT 1";
 		var res = runDBpediaQuery(query);
 		if(JSON.parse(res.content).results.bindings.length){
-			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			console.log("genre", JSON.parse(res.content).results.bindings[0].p.value);
 			return "genre";
 		} else {
 			console.log("No results found for genre!");
 		}
 
+		console.log("Searching DBpedia for records..");
 		var query = getAboutDBpediaQuery(keyword, ["Album", "Single"]);
 		var res = runDBpediaQuery(query);
 		if(JSON.parse(res.content).results.bindings.length){
-			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			console.log("record", JSON.parse(res.content).results.bindings[0].p.value);
 			return "record";
 		} else {
 			console.log("No results found for records!");
@@ -325,10 +327,11 @@ function getSemanticType(keyword, class_type){
 	}
 
 	if(class_type === "artist"){
+		console.log("Searching DBpedia for artists..");
 		var query = getAboutDBpediaQuery(keyword, ["Band", "MusicalArtist"]);
 		var res = runDBpediaQuery(query);
 		if(JSON.parse(res.content).results.bindings.length){
-			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			console.log("artist", JSON.parse(res.content).results.bindings[0].p.value);
 			return "artist";
 		} else {
 			console.log("No results found for artists!");
@@ -337,10 +340,11 @@ function getSemanticType(keyword, class_type){
 	}
 
 	if(class_type === "track"){
+		console.log("Searching DBpedia for tracks..");
 		var query = getAboutDBpediaQuery(keyword, ["Song", "Work"]);
 		var res = runDBpediaQuery(query);
 		if(JSON.parse(res.content).results.bindings.length){
-			console.log(JSON.parse(res.content).results.bindings[0].p.value);
+			console.log("track", JSON.parse(res.content).results.bindings[0].p.value);
 			return "track";
 		} else {
 			console.log("No results found for songs!");
