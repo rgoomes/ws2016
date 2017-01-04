@@ -15,7 +15,7 @@ function getID(str){
 	return str.replace(/\D/g, '');
 }
 
-function getTrack(track_uri, load_record){
+function getTrack(track_uri, load_record, load_lyrics, load_artist){
 	var sparql_query = entityQuery(track_uri);
 	var results = getQueryResults(sparql_query);
 	if(results == null || results.length == 0)
@@ -51,11 +51,18 @@ function getTrack(track_uri, load_record){
 		track.record_id = getID(record_uri);
 	}
 
-	var artist_uri = getTrackArtistURI(track_uri);
-	track.artist = getArtistName(artist_uri);
-	track.artist_id = getID(artist_uri);
+	// don't load the artist when loading track records.
+	// records have their artist associated
+	if(load_artist == true){
+		var artist_uri = getTrackArtistURI(track_uri);
+		track.artist = getArtistName(artist_uri);
+		track.artist_id = getID(artist_uri);
+	}
 
-	track.lyrics = getTrackLyrics(track_uri);
+	// don't load lyrics when searching for tracks and
+	// when loading track records
+	if(load_lyrics == true)
+		track.lyrics = getTrackLyrics(track_uri);
 
 	return track;
 }
@@ -103,7 +110,7 @@ function getRecord(record_uri, load_tracks){
 			record.ntracks += 1;
 
 			if(load_tracks == true)
-				record.tracks.push(getTrack(obj, false));
+				record.tracks.push(getTrack(obj, false, false, false));
 		}
 	}
 
@@ -185,7 +192,7 @@ function getSearchResults(keyword, type, class_type){
 		}
 		else if(class_type == "track"){
 			var track_uri = results[i].track.value;
-			search_results.push(getTrack(track_uri, true));
+			search_results.push(getTrack(track_uri, true, false, true));
 		}
 	}
 
@@ -370,7 +377,7 @@ Meteor.methods({
 			case 'record':
 				return getRecord(uri, true);
 			case 'track':
-				return getTrack(uri, true);
+				return getTrack(uri, true, true, true);
 			default:
 				return null;
 		}

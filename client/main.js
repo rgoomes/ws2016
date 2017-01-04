@@ -6,7 +6,6 @@ import './main.html';
 var no_results = 0;
 var hasFoundResults = false;
 
-
 var combo = "semantic_search";
 var setComboValue = function(){
 	if(combo == null || combo == "")
