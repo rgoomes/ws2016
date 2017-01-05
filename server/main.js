@@ -221,23 +221,13 @@ function getArtistTags(artist_uri) {
 
 function getAdvancedRecommendationResults(entity_uri, class_type) {
 	if (class_type === "record" || class_type === "track") {
-		var sparql_query = getAllRecordsQuery()
-		if(sparql_query == null)
-			return null;
-
-		var results = getQueryResults(sparql_query);
-		if(results == null)
-			return null;
+		var results = all_records;
 	}
 	else if (class_type === "artist") {
-		var sparql_query = getAllArtistsQuery()
-		if(sparql_query == null)
-			return null;
-
-		var results = getQueryResults(sparql_query);
-		if(results == null)
-			return null;
+		var results = all_artists;
 	}
+	if (results == null)
+		return null;
 
 	if (class_type === "record")
 		var s_tags = getRecordTags(entity_uri);
@@ -519,5 +509,6 @@ Meteor.methods({
 });
 
 Meteor.startup(() => {
-	// code to run on server at startup
+	var all_artists = getQueryResults(getAllArtistsQuery());
+	var all_records = getQueryResults(getAllRecordsQuery());
 });
