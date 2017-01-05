@@ -144,6 +144,14 @@ artistsQuery = function(keyword, limit) {
 	return query;
 }
 
+getRecordTagsQuery = function(record_uri) {
+	var sparql_query = "SELECT ?tag " +
+		"WHERE { " +
+			tag(record_uri) + " <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag . " +
+		"} ";
+	return sparql_query;
+}
+
 getArtistName = function(artist_uri){
 	var sparql_query = "SELECT ?name " +
 		"WHERE { " +
@@ -212,6 +220,39 @@ getTrackRecordURI = function(track_uri){
 		return "";
 
 	return results[0].record_uri.value;
+}
+
+getAllRecordsQuery = function() {
+	var sparql_query = "SELECT ?record_uri " + 
+		"WHERE { " + 
+			"?record_uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/Record> . " +
+		"} ";
+	return sparql_query;
+}
+
+getAllArtistsQuery = function() {
+	var sparql_query = "SELECT ?artist_uri " + 
+		"WHERE { " + 
+			"?artist_uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/mo/MusicArtist> . " +
+		"} ";
+	return sparql_query;
+}
+
+getAllArtistTagsQuery = function(artist_uri) {
+	var sparql_query = "SELECT DISTINCT ?tag " + 
+		"WHERE { " +
+			tag(artist_uri) + " <http://xmlns.com/foaf/0.1/made> ?record_uri . " +
+			"?record_uri <http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag> ?tag . " +
+		"} ";
+	return sparql_query;
+}
+
+getRecordTracksQuery = function(record_uri) {
+	var sparql_query = "SELECT ?track_uri " + 
+		"WHERE { " + 
+			tag(record_uri) + " <http://purl.org/ontology/mo/track> ?track_uri . " +
+		"} ";
+	return sparql_query;
 }
 
 runQuery = function(sparql_query){

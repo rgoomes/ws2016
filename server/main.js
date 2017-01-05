@@ -199,6 +199,131 @@ function getSearchResults(keyword, type, class_type){
 	return search_results;
 }
 
+function getRecordTags(record_uri) {
+	var sparql_query = getRecordTagsQuery(record_uri);
+	var results = getQueryResults(sparql_query);
+	var tags = [];
+	for (var i = 0; i < results.length; i++) {
+		tags.push(results[i].tag.value)
+	}
+	return tags;
+}
+
+function getArtistTags(artist_uri) {
+	var sparql_query = getAllArtistTagsQuery(artist_uri);
+	var results = getQueryResults(sparql_query);
+	var tags = [];
+	for (var i = 0; i < results.length; i++) {
+		tags.push(results[i].tag.value)
+	}
+	return tags;
+}
+
+function getAdvancedRecommendationResults(entity_uri, class_type) {
+	if (class_type === "record" || class_type === "track") {
+		var sparql_query = getAllRecordsQuery()
+		if(sparql_query == null)
+			return null;
+
+		var results = getQueryResults(sparql_query);
+		if(results == null)
+			return null;
+	}
+	else if (class_type === "artist") {
+		var sparql_query = getAllArtistsQuery()
+		if(sparql_query == null)
+			return null;
+
+		var results = getQueryResults(sparql_query);
+		if(results == null)
+			return null;
+	}
+
+	if (class_type === "record")
+		var s_tags = getRecordTags(entity_uri);
+	else if (class_type === "track") {
+		var r = getTrackRecordURI(entity_uri);
+		var s_tags = getRecordTags(r);
+	}
+	else if (class_type === "artist") {
+		var s_tags = getArtistTags(entity_uri);
+	}
+
+	if (s_tags == null || s_tags.length == 0)
+		return getRecommendationResults(entity_uri, class_type);
+
+	var recommendations = []
+	var aux = []
+	for(var i = 0; i < results.length; i++){
+		var rec = {name: "", ref: "", score: 0};
+
+		if(class_type === "artist"){
+			var artist_uri = results[i].artist_uri.value;
+			if (artist_uri == entity_uri)
+				continue;
+			var rec_tags = getArtistTags(artist_uri);
+			rec.name = getArtistName(artist_uri);
+			rec.ref = "/artist/" + getID(artist_uri);
+		}
+		else if(class_type === "record"){
+			var record_uri = results[i].record_uri.value;
+			if (record_uri == entity_uri)
+				continue;
+			var rec_tags = getRecordTags(record_uri);
+			rec.name = getRecordTitle(record_uri);
+			rec.ref = "/record/" + getID(record_uri);
+		}
+		else if(class_type === "track"){
+			var record_uri = results[i].record_uri.value;
+			var rec_tags = getRecordTags(record_uri);
+			rec.name = record_uri;
+			rec.ref = "/record/" + getID(record_uri);
+		}
+
+		var similarity = 0.0;
+
+		for (var j = 0; j < s_tags.length; j++) {
+			for(var k = 0; k < rec_tags.length; k++) {
+				if (s_tags[j] == rec_tags[k]) {
+					similarity += 1;
+					break;
+				}
+			}
+		}
+		
+		rec.score = Math.floor(similarity / s_tags.length * 100);
+		if (class_type === "artist" || class_type === "record") {
+			recommendations.push(rec);
+		}
+		else if (class_type === "track") {
+			aux.push(rec);
+		}
+	}
+
+	recommendations.sort(function(a, b){
+		return parseFloat(b.score) - parseFloat(a.score);
+	});
+
+	if(class_type === "track") {
+		aux.sort(function(a, b){
+			return parseFloat(b.score) - parseFloat(a.score);
+		});
+		for (var k = 0; k < 5; k++) {
+			var tracks = getQueryResults(getRecordTracksQuery(aux[k].name));
+			for (var n = 0; n < tracks.length; n++) {
+				var rec = {name: "", ref: "", score: 0};
+				rec.name = getTrackTitle(tracks[n].track_uri.value);
+				rec.ref = "/track/" + getID(tracks[n].track_uri.value);
+				rec.score = aux[k].score;
+				if (tracks[n].track_uri.value != entity_uri)
+					recommendations.push(rec);
+			}
+		}
+		return recommendations;
+	}
+	return recommendations.slice(0, 10);
+}
+
 function getRecommendationResults(entity_uri, class_type){
 	var sparql_query = getRecommendationQuery(entity_uri, class_type);
 	if(sparql_query == null)
@@ -228,7 +353,6 @@ function getRecommendationResults(entity_uri, class_type){
 			rec.ref = "/track/" + getID(track_uri);
 		}
 
-		// TODO: advanced recommendation
 		// generating a random number to test sort
 		rec.score = Math.floor(Math.random() * 100);
 
@@ -373,7 +497,7 @@ Meteor.methods({
 		return getSearchResults(keyword, type, class_type);
 	},
 	'recommendation': function(entity_uri, class_type){
-		return getRecommendationResults(entity_uri, class_type);
+		return getAdvancedRecommendationResults(entity_uri, class_type);
 	},
 	'lookup': function(uri, class_type){
 		this.unblock();
