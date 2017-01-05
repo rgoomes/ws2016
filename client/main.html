@@ -153,7 +153,7 @@
 				<div class="container-fluid">
 					<span style="font-size: 18px;">Tags</span><br>
 					{{#each getRecord.tags}}
-						<a href="/results?keyword={{this}}&type=tag">{{this}}</a>
+						<a href="/results?keyword={{this}}&type=tag">#{{this}}</a>
 					{{/each}}
 				</div>
 				<br>
@@ -196,7 +196,11 @@
 				<br>
 				<div class="container-fluid">
 					<span style="font-size: 18px;">License</span><br>
-					<span style="font-size: 14px;"><a href={{getTrack.license}}>{{getTrack.license}}</a></span>
+					{{#if hasLicence getTrack.license}}
+						<span style="font-size: 14px;"><a href={{getTrack.license}}>{{getTrack.license}}</a></span>
+					{{else}}
+						<span style="font-size: 14px;">{{getTrack.license}}</span>
+					{{/if}}
 				</div>
 			</div>
 			<div class="pull-left recommendation-div">
@@ -293,7 +297,7 @@
 				<td>{{ntracks}}</td>
 				<td>
 					{{#each tags}}
-						<a href="/results?keyword={{this}}&type=tag">{{this}}</a>
+						<a href="/results?keyword={{this}}&type=tag">#{{this}}</a>
 					{{/each}}
 				</td>
 			</tr>
@@ -322,7 +326,11 @@
 				<td><a href="/record/{{record_id}}">{{record}}</a></td>
 				{{/if}}
 				<td>{{number}}</td>
+				{{#if hasLicence license}}
 				<td><a href={{license}}>{{license}}</a></td>
+				{{else}}
+				<td>{{license}}</td>
+				{{/if}}
 			</tr>
 		{{/each}}
 	</tbody>

@@ -47,6 +47,10 @@ Template.registerHelper("getMessage", function (){
 	return Session.get("message");
 });
 
+Template.registerHelper("hasLicence", function (licence){
+	return licence !== "No License";
+});
+
 // NOTE: inner html rendering is not safe
 var enable_inner_html_rendering = false;
 Template.registerHelper("inner_html_renderization_enabled", function (){

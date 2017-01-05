@@ -119,7 +119,7 @@ function getRecord(record_uri, load_tracks){
 		record.artist_id = getID(artist_uri);
 	}
 
-	record.type = record.ntracks > 1 ? "Album" : "Single";
+	record.type = record.ntracks == 1 ? "Single" : "Album";
 
 	return record;
 }
@@ -261,13 +261,18 @@ function getSearchQuery(keyword, type){
 }
 
 function getRecommendationQuery(entity_uri, type){
+	// increasing this value will result later in a better
+	// recommendation system, but will also greatly decrease
+	// the performance and responsiveness
+	var limit = "100";
+
 	switch(type){
 		case 'artist':
-			return artistsRecommendationQuery(entity_uri, "100");
+			return artistsRecommendationQuery(entity_uri, limit);
 		case 'record':
-			return recordsRecommendationQuery(entity_uri, "100");
+			return recordsRecommendationQuery(entity_uri, limit);
 		case 'track':
-			return tracksRecommendationQuery(entity_uri, "100");
+			return tracksRecommendationQuery(entity_uri, limit);
 		default:
 			return null;
 	}
@@ -371,6 +376,7 @@ Meteor.methods({
 		return getRecommendationResults(entity_uri, class_type);
 	},
 	'lookup': function(uri, class_type){
+		this.unblock();
 		switch(class_type){
 			case 'artist':
 				return getArtist(uri, true);
