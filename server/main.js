@@ -2,6 +2,8 @@ import { Meteor } from 'meteor/meteor';
 import { HTTP } from 'meteor/http';
 
 var no_image = "https://placeholdit.imgix.net/~text?txtsize=20&txt=No+Image%0Aavailable&w=150&h=150&txttrack=0";
+var all_records = null;
+var all_artists = null;
 
 function brace(str){
 	return "{" + str + "}";
@@ -509,6 +511,6 @@ Meteor.methods({
 });
 
 Meteor.startup(() => {
-	var all_artists = getQueryResults(getAllArtistsQuery());
-	var all_records = getQueryResults(getAllRecordsQuery());
+	all_artists = getQueryResults(getAllArtistsQuery());
+	all_records = getQueryResults(getAllRecordsQuery());
 });
