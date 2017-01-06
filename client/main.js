@@ -52,7 +52,7 @@ Template.registerHelper("hasLicence", function (licence){
 });
 
 // NOTE: inner html rendering is not safe
-var enable_inner_html_rendering = false;
+var enable_inner_html_rendering = true;
 Template.registerHelper("inner_html_renderization_enabled", function (){
 	return enable_inner_html_rendering;
 });

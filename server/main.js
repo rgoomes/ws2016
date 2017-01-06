@@ -246,7 +246,9 @@ function getAdvancedRecommendationResults(entity_uri, class_type) {
 
 	var recommendations = []
 	var aux = []
-	for(var i = 0; i < results.length; i++){
+	var max_results = Math.min(results.length, 1000);
+
+	for(var i = 0; i < max_results; i++){
 		var rec = {name: "", ref: "", score: 0};
 
 		if(class_type === "artist"){
@@ -282,7 +284,7 @@ function getAdvancedRecommendationResults(entity_uri, class_type) {
 				}
 			}
 		}
-		
+
 		rec.score = Math.floor(similarity / s_tags.length * 100);
 		if (class_type === "artist" || class_type === "record") {
 			recommendations.push(rec);
@@ -311,7 +313,7 @@ function getAdvancedRecommendationResults(entity_uri, class_type) {
 					recommendations.push(rec);
 			}
 		}
-		return recommendations;
+		return recommendations.slice(0, 20);
 	}
 	return recommendations.slice(0, 10);
 }
